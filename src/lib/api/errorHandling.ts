@@ -7,7 +7,7 @@ export interface ErrorResponse {
   error: {
     message: string;
     code?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   };
 }
 
@@ -18,7 +18,7 @@ export function createErrorResponse(
   message: string,
   status: number = 500,
   code?: string,
-  details?: any
+  details?: Record<string, unknown>
 ): NextResponse<ErrorResponse> {
   return NextResponse.json(
     {
@@ -33,6 +33,15 @@ export function createErrorResponse(
 }
 
 /**
+ * Extended Error interface with additional properties we might encounter
+ */
+interface ExtendedError extends Error {
+  code?: string;
+  statusCode?: number;
+  status?: number;
+}
+
+/**
  * Handle common API errors
  */
 export function handleApiError(error: unknown): NextResponse<ErrorResponse> {
@@ -40,17 +49,19 @@ export function handleApiError(error: unknown): NextResponse<ErrorResponse> {
 
   // Handle known error types
   if (error instanceof Error) {
+    const extendedError = error as ExtendedError;
+    
     // Database-related errors often have specific codes
     if (
-      "code" in error &&
-      typeof error.code === "string" &&
-      error.code.startsWith("PGRST")
+      extendedError.code &&
+      typeof extendedError.code === "string" &&
+      extendedError.code.startsWith("PGRST")
     ) {
       return createErrorResponse(
         "Database operation failed",
         400,
-        error.code,
-        error.message
+        extendedError.code,
+        { originalMessage: extendedError.message }
       );
     }
 

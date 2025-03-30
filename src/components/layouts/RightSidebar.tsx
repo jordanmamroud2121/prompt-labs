@@ -26,7 +26,7 @@ const mockHistoryItems = [
 ];
 
 export default function RightSidebar() {
-  const [historyItems, setHistoryItems] = useState(mockHistoryItems);
+  const [historyItems] = useState(mockHistoryItems);
 
   // Group history items by date
   const groupedHistory = historyItems.reduce((groups, item) => {

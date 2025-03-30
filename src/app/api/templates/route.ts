@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
 
     // Check for query parameters
     const searchParams = request.nextUrl.searchParams;
-    const includePublic = searchParams.get("includePublic") !== "false";
     const onlyMine = searchParams.get("onlyMine") === "true";
     const onlyPublic = searchParams.get("onlyPublic") === "true";
 

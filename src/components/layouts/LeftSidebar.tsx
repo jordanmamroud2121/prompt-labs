@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { File, FolderOpen, Plus } from "lucide-react";
-import Link from "next/link";
 import TemplateModal from "@/components/templates/TemplateModal";
 
 // Temporary mock data until we implement the real data fetching

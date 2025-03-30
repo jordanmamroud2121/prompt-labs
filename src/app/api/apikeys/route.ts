@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { schemas, validateBody, getUserId } from "@/lib/api/validators";
+import { schemas, validateBody } from "@/lib/api/validators";
 import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
 import { 
   getUserApiKeys, 
@@ -10,7 +10,7 @@ import { supabase } from "@/lib/supabase/client";
 /**
  * GET /api/apikeys - Get all API keys for the current user
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   return withErrorHandling(async () => {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();

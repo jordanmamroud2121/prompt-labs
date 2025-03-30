@@ -11,7 +11,7 @@ import { supabase } from "@/lib/supabase/client";
 /**
  * GET /api/variables - Get all variables for the current user
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   return withErrorHandling(async () => {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();

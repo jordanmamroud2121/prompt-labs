@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { schemas, validateBody } from "@/lib/api/validators";
+import { schemas } from "@/lib/api/validators";
 import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
 import { 
   createResponse,
@@ -7,6 +7,16 @@ import {
   createResponses
 } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
+
+// Define types for the request bodies
+interface ResponseData {
+  prompt_id: string;
+  service_name: string;
+  response_text: string;
+  execution_time?: number;
+  tokens_used?: number;
+  error?: string;
+}
 
 /**
  * POST /api/responses - Create a new response
@@ -42,7 +52,7 @@ export async function POST(request: NextRequest) {
 /**
  * Handle creating a single response
  */
-async function handleSingleResponse(body: any, userId: string) {
+async function handleSingleResponse(body: unknown, userId: string) {
   // Validate request body
   const schema = schemas.response;
   const result = schema.safeParse(body);
@@ -56,7 +66,7 @@ async function handleSingleResponse(body: any, userId: string) {
     );
   }
   
-  const validatedData = result.data;
+  const validatedData = result.data as ResponseData;
   
   // Verify prompt belongs to user
   const prompt = await getPromptById(validatedData.prompt_id);
@@ -80,10 +90,10 @@ async function handleSingleResponse(body: any, userId: string) {
 /**
  * Handle creating multiple responses in batch
  */
-async function handleBatchResponses(items: any[], userId: string) {
+async function handleBatchResponses(items: unknown[], userId: string) {
   // Validate all items
   const schema = schemas.response;
-  const validatedItems = [];
+  const validatedItems: ResponseData[] = [];
   const errors = [];
   
   for (let i = 0; i < items.length; i++) {
@@ -94,7 +104,7 @@ async function handleBatchResponses(items: any[], userId: string) {
         errors: result.error.format(),
       });
     } else {
-      validatedItems.push(result.data);
+      validatedItems.push(result.data as ResponseData);
     }
   }
   

@@ -6,7 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { Settings, User, Brain, LogOut } from "lucide-react";
 
 export default function Header() {
-  const { user, signOut } = useAuth();
+  const { signOut } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 

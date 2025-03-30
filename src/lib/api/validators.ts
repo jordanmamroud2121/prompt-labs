@@ -17,9 +17,8 @@ export async function validateBody<T>(
     const result = schema.safeParse(body);
     
     if (!result.success) {
-      const errorMessage = formatZodError(result.error);
       const errorResponse = createErrorResponse(
-        errorMessage,
+        "Validation error",
         400,
         "VALIDATION_ERROR",
         result.error.format()
@@ -28,7 +27,7 @@ export async function validateBody<T>(
     }
     
     return [result.data, null];
-  } catch (error) {
+  } catch {
     const errorResponse = createErrorResponse(
       "Invalid request body",
       400,
@@ -36,18 +35,6 @@ export async function validateBody<T>(
     );
     return [null, errorResponse];
   }
-}
-
-/**
- * Format Zod error into readable message
- */
-function formatZodError(error: z.ZodError): string {
-  const issues = error.issues.map(issue => {
-    const path = issue.path.join(".");
-    return `${path ? `${path}: ` : ""}${issue.message}`;
-  });
-  
-  return `Validation error: ${issues.join(", ")}`;
 }
 
 /**
