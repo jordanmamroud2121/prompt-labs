@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import DevModeIndicator from "@/components/common/DevModeIndicator";
+import { PromptProvider } from "@/context/PromptContext";
+import { TemplateProvider } from "@/context/TemplateContext";
 
 export default function ProtectedLayout({
   children,
@@ -21,7 +23,11 @@ export default function ProtectedLayout({
 
   // Show loading state or children depending on auth state
   if (isLoading) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   if (!isAuthenticated) {
@@ -30,8 +36,10 @@ export default function ProtectedLayout({
 
   return (
     <>
-      {children}
+      <TemplateProvider>
+        <PromptProvider>{children}</PromptProvider>
+      </TemplateProvider>
       {process.env.NODE_ENV === "development" && <DevModeIndicator />}
     </>
   );
-} 
+}

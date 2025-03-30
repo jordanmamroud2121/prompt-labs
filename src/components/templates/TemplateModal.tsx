@@ -6,7 +6,11 @@ import { X } from "lucide-react";
 interface TemplateModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (template: { name: string; content: string }) => void;
+  onSave: (template: {
+    name: string;
+    content: string;
+    saveAsNew: boolean;
+  }) => void;
   initialData?: { name: string; content: string };
 }
 
@@ -18,6 +22,7 @@ export default function TemplateModal({
 }: TemplateModalProps) {
   const [name, setName] = useState("");
   const [content, setContent] = useState("");
+  const [saveAsNew, setSaveAsNew] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -25,9 +30,11 @@ export default function TemplateModal({
     if (initialData) {
       setName(initialData.name);
       setContent(initialData.content);
+      setSaveAsNew(false); // Reset the save as new option
     } else {
       setName("");
       setContent("");
+      setSaveAsNew(false);
     }
     setError(null);
   }, [initialData, isOpen]);
@@ -35,7 +42,10 @@ export default function TemplateModal({
   // Handle click outside of modal
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
+      if (
+        modalRef.current &&
+        !modalRef.current.contains(event.target as Node)
+      ) {
         onClose();
       }
     }
@@ -52,7 +62,7 @@ export default function TemplateModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       setError("Template name is required");
       return;
@@ -63,18 +73,18 @@ export default function TemplateModal({
       return;
     }
 
-    onSave({ name, content });
+    onSave({ name, content, saveAsNew });
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div 
+      <div
         ref={modalRef}
         className="w-full max-w-md rounded-lg bg-white shadow-xl"
         onClick={(e) => e.stopPropagation()}
@@ -131,9 +141,26 @@ export default function TemplateModal({
               placeholder="Enter template content with {variable} placeholders"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Use {"{variable}"} syntax for variables that can be replaced when using the template
+              Use {"{variable}"} syntax for variables that can be replaced when
+              using the template
             </p>
           </div>
+
+          {initialData && (
+            <div className="mb-4">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={saveAsNew}
+                  onChange={(e) => setSaveAsNew(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">
+                  Save as a new template
+                </span>
+              </label>
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2">
             <button
@@ -147,11 +174,15 @@ export default function TemplateModal({
               type="submit"
               className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
             >
-              Save Template
+              {initialData
+                ? saveAsNew
+                  ? "Save as New"
+                  : "Update Template"
+                : "Save Template"}
             </button>
           </div>
         </form>
       </div>
     </div>
   );
-} 
+}
