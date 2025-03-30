@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Settings, User, Brain, LogOut } from "lucide-react";
+import { Settings, Brain, LogOut } from "lucide-react";
 
 export default function Header() {
   const { signOut } = useAuth();
@@ -35,14 +35,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center space-x-4">
-          <Link
-            href="/account"
-            className="flex items-center space-x-1 rounded-md px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
-          >
-            <User className="h-4 w-4" />
-            <span>Account</span>
-          </Link>
-
           <div className="relative" ref={settingsRef}>
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
