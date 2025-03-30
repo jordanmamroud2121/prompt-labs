@@ -3,11 +3,13 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { Settings, Brain, LogOut } from "lucide-react";
+import { Settings, Brain, LogOut, Key } from "lucide-react";
+import APIKeyManager from "@/components/settings/APIKeyManager";
 
 export default function Header() {
   const { signOut } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [showAPIKeyManager, setShowAPIKeyManager] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
 
   // Close settings dropdown when clicking outside
@@ -45,17 +47,36 @@ export default function Header() {
             </button>
             
             {isSettingsOpen && (
-              <div className="absolute right-0 mt-2 w-48 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-10">
+              <div className="absolute right-0 mt-2 w-72 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-10 max-h-[80vh] overflow-y-auto">
+                {/* API Key Manager Button */}
                 <button
-                  onClick={() => {
-                    signOut();
-                    setIsSettingsOpen(false);
-                  }}
+                  onClick={() => setShowAPIKeyManager(!showAPIKeyManager)}
                   className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Logout</span>
+                  <Key className="mr-2 h-4 w-4" />
+                  <span>Manage API Keys</span>
                 </button>
+                
+                {/* Show API Key Manager if button is clicked */}
+                {showAPIKeyManager && (
+                  <div className="px-4 py-3 border-t border-gray-100">
+                    <APIKeyManager />
+                  </div>
+                )}
+                
+                {/* Logout Button */}
+                <div className="border-t border-gray-100">
+                  <button
+                    onClick={() => {
+                      signOut();
+                      setIsSettingsOpen(false);
+                    }}
+                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -81,6 +81,7 @@ export const SERVICES = {
   ANTHROPIC: 'anthropic',
   GEMINI: 'gemini',
   DEEPSEEK: 'deepseek',
+  PERPLEXITY: 'perplexity',
 } as const;
 
 export type ServiceName = typeof SERVICES[keyof typeof SERVICES]; 

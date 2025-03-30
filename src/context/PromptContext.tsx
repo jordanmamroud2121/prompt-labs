@@ -6,12 +6,15 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useCallback,
 } from "react";
 import { createPrompt } from "@/lib/supabase/queries/prompts";
 import { createResponse } from "@/lib/supabase/queries/responses";
 import { ServiceName } from "@/lib/supabase/models";
 import { getAIClient } from "@/lib/ai/clientFactory";
 import { useAuth } from "./AuthContext";
+import { MODELS } from "@/lib/ai/modelData";
+// import { toast } from "@/components/ui/use-toast";
 
 export interface PromptState {
   selectedModels: string[];
@@ -23,6 +26,7 @@ export interface PromptState {
   characterCount: number;
   selectedTemplateId: string | null;
   validationMessage: string | null;
+  errorMessage: string | null;
 }
 
 interface PromptContextType extends PromptState {
@@ -36,6 +40,8 @@ interface PromptContextType extends PromptState {
   clearAttachments: () => void;
   applyTemplateToPrompt: (templateId: string, templateText: string) => void;
   validatePrompt: () => boolean;
+  getCompatibleModels: () => string[];
+  clearError: () => void;
 }
 
 const MAX_PROMPT_LENGTH = 32000; // OpenAI's maximum token limit is around 4k, which is roughly 16k-32k chars
@@ -50,6 +56,7 @@ const defaultState: PromptState = {
   characterCount: 0,
   selectedTemplateId: null,
   validationMessage: null,
+  errorMessage: null,
 };
 
 const PromptContext = createContext<PromptContextType | undefined>(undefined);
@@ -77,24 +84,24 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, [state.promptText, state.validationMessage]);
 
-  const setSelectedModels = (models: string[]) => {
+  const setSelectedModels = useCallback((models: string[]) => {
     setState((prev) => ({ ...prev, selectedModels: models }));
-  };
+  }, []);
 
-  const toggleModel = (model: string) => {
+  const toggleModel = useCallback((model: string) => {
     setState((prev) => ({
       ...prev,
       selectedModels: prev.selectedModels.includes(model)
         ? prev.selectedModels.filter((m) => m !== model)
         : [...prev.selectedModels, model],
     }));
-  };
+  }, []);
 
-  const setPromptText = (text: string) => {
+  const setPromptText = useCallback((text: string) => {
     setState((prev) => ({ ...prev, promptText: text }));
-  };
+  }, []);
 
-  const resetPrompt = () => {
+  const resetPrompt = useCallback(() => {
     setState((prev) => ({
       ...prev,
       promptText: "",
@@ -103,18 +110,56 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       hasAttachments: false,
       selectedTemplateId: null,
       validationMessage: null,
+      errorMessage: null,
     }));
-  };
+  }, []);
 
-  const addAttachment = (file: File) => {
-    setState((prev) => ({
-      ...prev,
-      attachments: [...prev.attachments, file],
-      hasAttachments: true,
-    }));
-  };
+  const addAttachment = useCallback((file: File) => {
+    setState((prev) => {
+      // Check if adding this attachment would make some models incompatible
+      const newAttachments = [...prev.attachments, file];
+      const hasImages = newAttachments.some(file => 
+        file.type.startsWith('image/'));
+      
+      // Filter selected models to only include those that support images
+      let newSelectedModels = prev.selectedModels;
+      if (hasImages) {
+        // Check in a single go if we need to filter models
+        const compatibleModels = MODELS.filter(model => 
+          model.capabilities.images && 
+          prev.selectedModels.includes(model.id)
+        ).map(model => model.id);
+        
+        // Only update if we need to filter out incompatible models
+        if (compatibleModels.length < prev.selectedModels.length) {
+          newSelectedModels = compatibleModels;
+          
+          // We'll set the error message in a separate update to avoid potential loop
+          setTimeout(() => {
+            setState(prevState => {
+              // Only set the error message if it hasn't changed in the meantime
+              if (!prevState.errorMessage) {
+                return {
+                  ...prevState,
+                  errorMessage: "Some selected models don't support image attachments and have been removed."
+                };
+              }
+              return prevState;
+            });
+          }, 0);
+        }
+      }
+      
+      return {
+        ...prev,
+        attachments: newAttachments,
+        hasAttachments: true,
+        selectedModels: newSelectedModels,
+      };
+    });
+  }, []);
 
-  const removeAttachment = (index: number) => {
+  const removeAttachment = useCallback((index: number) => {
     setState((prev) => {
       const newAttachments = [...prev.attachments];
       newAttachments.splice(index, 1);
@@ -124,25 +169,57 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
         hasAttachments: newAttachments.length > 0,
       };
     });
-  };
+  }, []);
 
-  const clearAttachments = () => {
+  const clearAttachments = useCallback(() => {
     setState((prev) => ({
       ...prev,
       attachments: [],
       hasAttachments: false,
     }));
-  };
+  }, []);
 
-  const applyTemplateToPrompt = (templateId: string, templateText: string) => {
+  const applyTemplateToPrompt = useCallback((templateId: string, templateText: string) => {
     setState((prev) => ({
       ...prev,
       promptText: templateText,
       selectedTemplateId: templateId,
     }));
-  };
+  }, []);
 
-  const validatePrompt = (): boolean => {
+  const clearError = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      errorMessage: null,
+    }));
+  }, []);
+
+  // Get models that are compatible with current attachments
+  const getCompatibleModels = useCallback((): string[] => {
+    // Return early if we don't have attachments
+    if (!state.hasAttachments || state.attachments.length === 0) {
+      return MODELS.map(model => model.id);
+    }
+    
+    const hasImages = state.attachments.some(file => 
+      file.type.startsWith('image/'));
+    
+    const hasAudio = state.attachments.some(file => 
+      file.type.startsWith('audio/'));
+      
+    const hasVideo = state.attachments.some(file => 
+      file.type.startsWith('video/'));
+    
+    // Return filtered models based on capabilities
+    return MODELS.filter(model => {
+      if (hasImages && !model.capabilities.images) return false;
+      if (hasAudio && !model.capabilities.audio) return false;
+      if (hasVideo && !model.capabilities.video) return false;
+      return true;
+    }).map(model => model.id);
+  }, [state.hasAttachments, state.attachments]);
+
+  const validatePrompt = useCallback((): boolean => {
     if (!state.promptText.trim()) {
       setState((prev) => ({
         ...prev,
@@ -167,18 +244,43 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       return false;
     }
 
-    return true;
-  };
+    // Check if all selected models support the current attachments
+    if (state.hasAttachments) {
+      const compatibleModels = getCompatibleModels();
+      const incompatibleModels = state.selectedModels.filter(
+        modelId => !compatibleModels.includes(modelId)
+      );
+      
+      if (incompatibleModels.length > 0) {
+        const incompatibleNames = incompatibleModels
+          .map(id => MODELS.find(m => m.id === id)?.name || id)
+          .join(', ');
+        
+        setState((prev) => ({
+          ...prev,
+          validationMessage: `The following models don't support the attached files: ${incompatibleNames}`,
+        }));
+        return false;
+      }
+    }
 
-  const handlePromptSubmit = async () => {
+    return true;
+  }, [state.promptText, state.selectedModels, state.hasAttachments, getCompatibleModels]);
+
+  const handlePromptSubmit = useCallback(async () => {
     if (!validatePrompt() || state.isLoading || !user) {
       return;
     }
 
-    setState((prev) => ({ ...prev, isLoading: true, responses: {} }));
+    setState((prev) => ({ 
+      ...prev, 
+      isLoading: true, 
+      responses: {},
+      errorMessage: null 
+    }));
 
     try {
-      // Save prompt to database (commented out for now since we're using mock responses)
+      // Save prompt to database
       const savedPrompt = await createPrompt({
         user_id: user.id,
         prompt_text: state.promptText,
@@ -186,21 +288,36 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
         template_id: state.selectedTemplateId ?? undefined,
       });
 
-      // Temporary: use mock responses
+      // Process responses for each selected model
       const responses: Record<string, string> = {};
       const responsePromises = state.selectedModels.map(async (modelId) => {
         try {
           // Identify which service this model belongs to
           let serviceName: ServiceName = "openai";
-
-          if (modelId.includes("gpt")) {
-            serviceName = "openai";
-          } else if (modelId.includes("claude")) {
-            serviceName = "anthropic";
-          } else if (modelId.includes("gemini")) {
-            serviceName = "gemini";
-          } else if (modelId.includes("deepseek")) {
-            serviceName = "deepseek";
+          const model = MODELS.find(m => m.id === modelId);
+          
+          if (!model) {
+            throw new Error(`Unknown model: ${modelId}`);
+          }
+          
+          switch (model.provider.toLowerCase()) {
+            case "openai":
+              serviceName = "openai";
+              break;
+            case "anthropic":
+              serviceName = "anthropic";
+              break;
+            case "google":
+              serviceName = "gemini";
+              break;
+            case "perplexity":
+              serviceName = "perplexity";
+              break;
+            case "deepseek":
+              serviceName = "deepseek";
+              break;
+            default:
+              serviceName = "openai";
           }
 
           // Get the client for this service
@@ -225,8 +342,13 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
           });
         } catch (error) {
           console.error(`Error generating response from ${modelId}:`, error);
-          responses[modelId] =
-            `Error: Failed to generate response from ${modelId}`;
+          responses[modelId] = `Error: Failed to generate response from ${modelId}`;
+          
+          // Set error message
+          setState(prevState => ({
+            ...prevState,
+            errorMessage: `Failed to generate response: ${(error as Error).message || 'Unknown error'}`
+          }));
         }
       });
 
@@ -243,10 +365,11 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       setState((prev) => ({
         ...prev,
         isLoading: false,
-        validationMessage: "Failed to submit prompt. Please try again.",
+        errorMessage: `Failed to submit prompt: ${(error as Error).message || 'Unknown error'}`,
       }));
     }
-  };
+  }, [state.promptText, state.selectedModels, state.hasAttachments, 
+      state.attachments, state.selectedTemplateId, user, validatePrompt]);
 
   const value = useMemo(
     () => ({
@@ -261,8 +384,24 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       clearAttachments,
       applyTemplateToPrompt,
       validatePrompt,
+      getCompatibleModels,
+      clearError,
     }),
-    [state, handlePromptSubmit, validatePrompt],
+    [
+      state,
+      setSelectedModels,
+      toggleModel,
+      setPromptText,
+      handlePromptSubmit,
+      resetPrompt,
+      addAttachment,
+      removeAttachment,
+      clearAttachments,
+      applyTemplateToPrompt,
+      validatePrompt,
+      getCompatibleModels,
+      clearError,
+    ]
   );
 
   return (
