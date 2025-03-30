@@ -64,15 +64,15 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      // Fetch user's API keys from the database
-      const userApiKeys = await getUserApiKeys(user.id);
-      
       // Initialize API keys and validation status
       const apiKeys: Record<string, string> = {};
       const validationStatus: Record<string, 'valid' | 'invalid' | 'checking' | 'unknown'> = {};
       const usingEnvVars: Record<string, boolean> = {};
       
-      // First, try to get API keys from user's saved keys
+      // First, fetch user's API keys from the database
+      const userApiKeys = await getUserApiKeys(user.id);
+      
+      // Add user's saved keys
       userApiKeys.forEach(key => {
         if (key.is_active) {
           apiKeys[key.service_name] = key.api_key;
@@ -81,14 +81,33 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
-      // Then, check for environment variables as fallback
+      // Then, add environment variables for any missing keys
       for (const [serviceName, envVar] of Object.entries(ENV_VAR_MAPPING)) {
         // Only use env var if user doesn't have a key for this service
         if (!apiKeys[serviceName] && process.env[envVar]) {
           apiKeys[serviceName] = process.env[envVar] || '';
-          validationStatus[serviceName] = 'unknown';
+          // For development, assume OpenAI and Google env vars are valid immediately
+          if (serviceName === 'openai' || serviceName === 'google') {
+            validationStatus[serviceName] = 'valid';
+          } else {
+            validationStatus[serviceName] = 'unknown';
+          }
           usingEnvVars[serviceName] = true;
         }
+      }
+      
+      // For our development environment, always include OpenAI and Google
+      // if environment variables exist in .env.local
+      if (!apiKeys['openai'] && process.env.OPENAI_API_KEY) {
+        apiKeys['openai'] = process.env.OPENAI_API_KEY || '';
+        validationStatus['openai'] = 'valid'; // Assume valid for development
+        usingEnvVars['openai'] = true;
+      }
+      
+      if (!apiKeys['google'] && process.env.GEMINI_API_KEY) {
+        apiKeys['google'] = process.env.GEMINI_API_KEY || '';
+        validationStatus['google'] = 'valid'; // Assume valid for development
+        usingEnvVars['google'] = true;
       }
       
       setState(prev => ({
@@ -99,10 +118,23 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
         usingEnvVars,
       }));
 
-      // Validate all API keys in the background
-      Object.keys(apiKeys).forEach(serviceName => {
-        validateApiKey(serviceName, apiKeys[serviceName]);
-      });
+      // We'll validate the keys after the component is fully mounted
+      // and the validateApiKey function is available
+      const keysToValidate = Object.keys(apiKeys).filter(
+        key => validationStatus[key] !== 'valid'
+      );
+      
+      if (keysToValidate.length > 0) {
+        // Use setTimeout to break the call cycle
+        setTimeout(() => {
+          keysToValidate.forEach(service => {
+            const key = apiKeys[service];
+            if (key) {
+              validateApiKeyImpl(service, key);
+            }
+          });
+        }, 0);
+      }
     } catch (error) {
       console.error('Error fetching API keys:', error);
       setState(prev => ({
@@ -118,11 +150,9 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
     fetchApiKeys();
   }, [fetchApiKeys]);
 
-  // Validate an API key
-  const validateApiKey = useCallback(async (serviceName: string, apiKey?: string): Promise<boolean> => {
-    const keyToValidate = apiKey || state.apiKeys[serviceName];
-    
-    if (!keyToValidate) {
+  // Internal implementation of API key validation
+  const validateApiKeyImpl = async (serviceName: string, apiKey: string): Promise<boolean> => {
+    if (!apiKey) {
       setState(prev => ({
         ...prev,
         validationStatus: {
@@ -144,7 +174,7 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
     try {
       // Try to validate the API key with the appropriate client
       const client = getAIClient(serviceName as ServiceName);
-      const isValid = await client.validateApiKey(keyToValidate);
+      const isValid = await client.validateApiKey(apiKey);
       
       setState(prev => ({
         ...prev,
@@ -166,6 +196,12 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
       }));
       return false;
     }
+  };
+
+  // Validate an API key (public method)
+  const validateApiKey = useCallback(async (serviceName: string, apiKey?: string): Promise<boolean> => {
+    const keyToValidate = apiKey || state.apiKeys[serviceName];
+    return validateApiKeyImpl(serviceName, keyToValidate);
   }, [state.apiKeys]);
 
   // Save an API key
@@ -274,7 +310,10 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
           
           // Validate the environment variable key in the background
           setTimeout(() => {
-            validateApiKey(serviceName, newApiKeys[serviceName]);
+            const keyToCheck = newApiKeys[serviceName];
+            if (keyToCheck) {
+              validateApiKeyImpl(serviceName, keyToCheck);
+            }
           }, 0);
         }
         
@@ -293,25 +332,40 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
         error: `Failed to delete ${serviceName} API key. Please try again.`,
       }));
     }
-  }, [user, validateApiKey]);
+  }, [user]);
 
   // Check if we have a valid API key for a service
   const hasValidApiKeyFor = useCallback((serviceName: string): boolean => {
-    // For debugging - uncomment to temporarily bypass validation and allow all models
-    return true;
+    // Always allow OpenAI and Google models which have environment variables
+    // in our development setup
+    if (serviceName === 'openai' || serviceName === 'google') {
+      return true;
+    }
     
-    // Consider API key valid if:
+    // For other services, check if we have a valid API key:
     // 1. We have an API key for this service AND
     // 2. The validation status is 'valid' OR
-    // 3. We're using an environment variable and validation is still 'unknown' (hasn't completed yet)
-    /*
-    return (
-      state.apiKeys[serviceName] !== undefined && 
-      (state.validationStatus[serviceName] === 'valid' || 
-       (state.usingEnvVars[serviceName] && state.validationStatus[serviceName] === 'unknown'))
-    );
-    */
-  }, []);
+    // 3. We're using an environment variable and validation status is still 'unknown'
+    //    (validation is likely in progress)
+    
+    // First check if API key exists
+    if (state.apiKeys[serviceName] === undefined) {
+      return false;
+    }
+    
+    // Check if the key is valid
+    if (state.validationStatus[serviceName] === 'valid') {
+      return true;
+    }
+    
+    // Special case: if using environment variable and validation is pending
+    if (state.usingEnvVars[serviceName] && state.validationStatus[serviceName] === 'unknown') {
+      return true;
+    }
+    
+    // In all other cases, consider the API key invalid
+    return false;
+  }, [state.apiKeys, state.validationStatus, state.usingEnvVars]);
 
   // Refresh API keys
   const refreshApiKeys = useCallback(async (): Promise<void> => {
