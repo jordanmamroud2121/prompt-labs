@@ -57,4 +57,9 @@ export interface AIClient {
   validateApiKey(apiKey: string): Promise<boolean>;
 }
 
-export type ServiceName = "openai" | "anthropic" | "gemini" | "deepseek" | "perplexity";
+export type ServiceName =
+  | "openai"
+  | "anthropic"
+  | "gemini"
+  | "deepseek"
+  | "perplexity";

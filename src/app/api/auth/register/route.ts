@@ -15,13 +15,13 @@ const registerSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate request body
     const validation = registerSchema.safeParse(body);
     if (!validation.success) {
       return NextResponse.json(
         { error: validation.error.errors[0].message },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -39,21 +39,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       user: data.user,
-      message: "Registration successful. Please check your email to verify your account." 
+      message:
+        "Registration successful. Please check your email to verify your account.",
     });
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}

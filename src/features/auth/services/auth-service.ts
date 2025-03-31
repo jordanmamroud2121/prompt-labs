@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase/client';
-import { LoginCredentials, SignupCredentials, User } from '../types';
+import { supabase } from "@/lib/supabase/client";
+import { LoginCredentials, SignupCredentials, User } from "../types";
 
 export const authService = {
   async login({ email, password }: LoginCredentials) {
@@ -35,7 +35,7 @@ export const authService = {
 
   async logout() {
     const { error } = await supabase.auth.signOut();
-    
+
     if (error) {
       throw new Error(error.message);
     }
@@ -45,7 +45,7 @@ export const authService = {
 
   async getCurrentUser(): Promise<User | null> {
     const { data, error } = await supabase.auth.getUser();
-    
+
     if (error || !data?.user) {
       return null;
     }
@@ -62,7 +62,7 @@ export const authService = {
 
   async getSession() {
     const { data, error } = await supabase.auth.getSession();
-    
+
     if (error) {
       throw new Error(error.message);
     }
@@ -71,4 +71,4 @@ export const authService = {
   },
 };
 
-export default authService; 
+export default authService;

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { createContext, useContext, ReactNode } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { MockAuthProvider, useMockAuth } from './MockAuthProvider';
-import { LoginCredentials, SignupCredentials, User } from '../types';
+import { createContext, useContext, ReactNode } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { MockAuthProvider, useMockAuth } from "./MockAuthProvider";
+import { LoginCredentials, SignupCredentials, User } from "../types";
 
 type AuthContextType = {
   user: User | null;
@@ -19,8 +19,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Custom hook to determine if mock auth should be used
 function useMockAuthEnabled() {
-  const isMockEnabled = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
-  const isDev = process.env.NODE_ENV === 'development';
+  const isMockEnabled = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
+  const isDev = process.env.NODE_ENV === "development";
   return isDev && isMockEnabled;
 }
 
@@ -33,11 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return <MockAuthProvider>{children}</MockAuthProvider>;
   }
 
-  return (
-    <AuthContext.Provider value={auth}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 
 export function useAuthContext() {
@@ -51,8 +47,8 @@ export function useAuthContext() {
   }
 
   if (context === undefined) {
-    throw new Error('useAuthContext must be used within an AuthProvider');
+    throw new Error("useAuthContext must be used within an AuthProvider");
   }
 
   return context;
-} 
+}

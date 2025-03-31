@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas, validateBody } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
-import { 
-  getUserPrompts, 
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
+import {
+  getUserPrompts,
   createPrompt,
   searchPrompts,
 } from "@/lib/supabase/queries";
@@ -16,7 +19,7 @@ export async function GET(request: NextRequest) {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -46,7 +49,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const [validatedData, validationError] = await validateBody(
       request,
-      schemas.prompt
+      schemas.prompt,
     );
 
     if (validationError) {
@@ -73,4 +76,4 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newPrompt, { status: 201 });
   });
-} 
+}

@@ -67,21 +67,21 @@ export interface Variable {
 
 // Database table names as constants
 export const TABLES = {
-  USERS: 'users',
-  API_KEYS: 'api_keys',
-  PROMPTS: 'prompts',
-  RESPONSES: 'responses',
-  TEMPLATES: 'templates',
-  VARIABLES: 'variables',
+  USERS: "users",
+  API_KEYS: "api_keys",
+  PROMPTS: "prompts",
+  RESPONSES: "responses",
+  TEMPLATES: "templates",
+  VARIABLES: "variables",
 } as const;
 
 // Service name constants
 export const SERVICES = {
-  OPENAI: 'openai',
-  ANTHROPIC: 'anthropic',
-  GEMINI: 'gemini',
-  DEEPSEEK: 'deepseek',
-  PERPLEXITY: 'perplexity',
+  OPENAI: "openai",
+  ANTHROPIC: "anthropic",
+  GEMINI: "gemini",
+  DEEPSEEK: "deepseek",
+  PERPLEXITY: "perplexity",
 } as const;
 
-export type ServiceName = typeof SERVICES[keyof typeof SERVICES]; 
+export type ServiceName = (typeof SERVICES)[keyof typeof SERVICES];

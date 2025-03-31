@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas, validateBody } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
-import { 
-  getUserApiKeys, 
-  createApiKey, 
-} from "@/lib/supabase/queries";
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
+import { getUserApiKeys, createApiKey } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 
 /**
@@ -15,17 +15,17 @@ export async function GET() {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
 
     // Get API keys for user
     const apiKeys = await getUserApiKeys(userId);
-    
+
     // Remove actual API keys from response for security
     // Only return partial key information
-    const sanitizedKeys = apiKeys.map(key => ({
+    const sanitizedKeys = apiKeys.map((key) => ({
       id: key.id,
       service_name: key.service_name,
       is_active: key.is_active,
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const [validatedData, validationError] = await validateBody(
       request,
-      schemas.apiKey
+      schemas.apiKey,
     );
 
     if (validationError) {
@@ -70,11 +70,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Return sanitized response (omit full API key)
-    return NextResponse.json({
-      id: newApiKey.id,
-      service_name: newApiKey.service_name,
-      is_active: newApiKey.is_active,
-      created_at: newApiKey.created_at,
-    }, { status: 201 });
+    return NextResponse.json(
+      {
+        id: newApiKey.id,
+        service_name: newApiKey.service_name,
+        is_active: newApiKey.is_active,
+        created_at: newApiKey.created_at,
+      },
+      { status: 201 },
+    );
   });
-} 
+}

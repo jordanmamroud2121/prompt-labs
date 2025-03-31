@@ -42,7 +42,7 @@ export async function getApiKeyById(keyId: string): Promise<ApiKey | null> {
  */
 export async function getUserApiKeyForService(
   userId: string,
-  serviceName: string
+  serviceName: string,
 ): Promise<ApiKey | null> {
   const { data, error } = await supabase
     .from(TABLES.API_KEYS)
@@ -67,7 +67,9 @@ export async function getUserApiKeyForService(
 /**
  * Create a new API key
  */
-export async function createApiKey(apiKey: Omit<ApiKey, "id" | "created_at">): Promise<ApiKey> {
+export async function createApiKey(
+  apiKey: Omit<ApiKey, "id" | "created_at">,
+): Promise<ApiKey> {
   const { data, error } = await supabase
     .from(TABLES.API_KEYS)
     .insert(apiKey)
@@ -87,7 +89,7 @@ export async function createApiKey(apiKey: Omit<ApiKey, "id" | "created_at">): P
  */
 export async function updateApiKey(
   keyId: string,
-  updates: Partial<Omit<ApiKey, "id" | "user_id" | "created_at">>
+  updates: Partial<Omit<ApiKey, "id" | "user_id" | "created_at">>,
 ): Promise<ApiKey> {
   const { data, error } = await supabase
     .from(TABLES.API_KEYS)
@@ -117,4 +119,4 @@ export async function deleteApiKey(keyId: string): Promise<void> {
     console.error("Error deleting API key:", error);
     throw new Error(`Failed to delete API key: ${error.message}`);
   }
-} 
+}

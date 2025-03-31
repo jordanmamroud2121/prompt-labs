@@ -15,4 +15,4 @@ export * from "./responses";
 export * from "./templates";
 
 // Variables
-export * from "./variables"; 
+export * from "./variables";

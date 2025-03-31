@@ -1,11 +1,11 @@
 "use client";
 
-import { 
-  createContext, 
-  useContext, 
-  useState, 
-  useEffect, 
-  ReactNode 
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
 } from "react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,11 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error?: string }>;
-  signUp: (email: string, password: string, name: string) => Promise<{ error?: string }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string,
+  ) => Promise<{ error?: string }>;
   signOut: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -36,15 +40,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     const initializeAuth = async () => {
       try {
         // Get session data
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         setUser(session?.user || null);
-        
+
         // Set up auth state change listener
-        const { data: { subscription } } = await supabase.auth.onAuthStateChange(
-          (_event, session) => {
-            setUser(session?.user || null);
-          }
-        );
+        const {
+          data: { subscription },
+        } = await supabase.auth.onAuthStateChange((_event, session) => {
+          setUser(session?.user || null);
+        });
 
         return () => {
           subscription.unsubscribe();
@@ -65,10 +71,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signIn = async (email: string, password: string) => {
     try {
       // First attempt to sign in directly with Supabase
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data: authData, error: authError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
       if (authError) {
         return { error: authError.message };
@@ -76,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       // Update user state directly
       setUser(authData.user);
-      
+
       // Also make the API call to keep server and client in sync
       const response = await fetch("/api/auth", {
         method: "POST",
@@ -137,12 +144,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       await supabase.auth.signOut();
       setUser(null);
-      
+
       // Also call the API logout endpoint
       await fetch("/api/auth/logout", {
         method: "POST",
       });
-      
+
       router.push("/login");
     } catch (error) {
       console.error("Sign out error:", error);
@@ -167,4 +174,4 @@ export function useAuth() {
     throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
-} 
+}

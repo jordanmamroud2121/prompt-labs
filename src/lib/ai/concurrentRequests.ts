@@ -4,7 +4,12 @@ import { getAIClient } from "./clientFactory";
 /**
  * Status of a concurrent request
  */
-export type RequestStatus = 'idle' | 'loading' | 'streaming' | 'success' | 'error';
+export type RequestStatus =
+  | "idle"
+  | "loading"
+  | "streaming"
+  | "success"
+  | "error";
 
 /**
  * Request state for tracking purposes
@@ -24,7 +29,11 @@ export interface RequestState {
 export interface ConcurrentRequestOptions {
   onStatusChange?: (service: ServiceName, status: RequestStatus) => void;
   onProgress?: (service: ServiceName, progress: number) => void;
-  onStreamChunk?: (service: ServiceName, text: string, isComplete: boolean) => void;
+  onStreamChunk?: (
+    service: ServiceName,
+    text: string,
+    isComplete: boolean,
+  ) => void;
   onResponse?: (service: ServiceName, response: AIResponse) => void;
   onError?: (service: ServiceName, error: string) => void;
 }
@@ -51,100 +60,110 @@ export class ConcurrentRequests {
    * Send a prompt to multiple AI services concurrently
    */
   async sendToMultipleServices(
-    services: ServiceName[], 
-    request: AIRequest
+    services: ServiceName[],
+    request: AIRequest,
   ): Promise<Map<ServiceName, AIResponse>> {
     // Initialize request states
-    services.forEach(service => {
+    services.forEach((service) => {
       const model = request.options?.modelId || getAIClient(service).models[0];
       this.requestStates.set(service, {
         service,
         model,
-        status: 'idle',
-        progress: 0
+        status: "idle",
+        progress: 0,
       });
     });
 
     // Create a promise for each service
-    const promises = services.map(service => this.sendToService(service, request));
-    
+    const promises = services.map((service) =>
+      this.sendToService(service, request),
+    );
+
     // Wait for all requests to complete
     const results = await Promise.allSettled(promises);
-    
+
     // Process results
     const responses = new Map<ServiceName, AIResponse>();
-    
+
     results.forEach((result, index) => {
       const service = services[index];
-      
-      if (result.status === 'fulfilled') {
+
+      if (result.status === "fulfilled") {
         responses.set(service, result.value);
       } else {
         // For rejected promises, store an error response
         const errorResponse: AIResponse = {
-          text: '',
-          model: this.requestStates.get(service)?.model || 'unknown',
+          text: "",
+          model: this.requestStates.get(service)?.model || "unknown",
           executionTime: 0,
-          error: result.reason?.message || 'Unknown error'
+          error: result.reason?.message || "Unknown error",
         };
         responses.set(service, errorResponse);
       }
     });
-    
+
     return responses;
   }
 
   /**
    * Send a prompt to a single AI service
    */
-  private async sendToService(service: ServiceName, request: AIRequest): Promise<AIResponse> {
+  private async sendToService(
+    service: ServiceName,
+    request: AIRequest,
+  ): Promise<AIResponse> {
     const client = getAIClient(service);
-    
+
     // Update state to loading
     this.updateRequestState(service, {
-      status: 'loading',
-      progress: 0
+      status: "loading",
+      progress: 0,
     });
-    
+
     try {
       // If streaming is supported and enabled, use streaming API
-      if (client.supportsStreaming && request.options?.stream !== false && client.generateStreamingCompletion) {
+      if (
+        client.supportsStreaming &&
+        request.options?.stream !== false &&
+        client.generateStreamingCompletion
+      ) {
         // Update state to streaming
         this.updateRequestState(service, {
-          status: 'streaming',
-          progress: 0
+          status: "streaming",
+          progress: 0,
         });
-        
+
         return await this.handleStreamingRequest(service, client, request);
       } else {
         // Use regular completion API
         const response = await client.generateCompletion(request);
-        
+
         // Update state to success
         this.updateRequestState(service, {
-          status: 'success',
+          status: "success",
           progress: 100,
-          response
+          response,
         });
-        
+
         // Trigger onResponse callback
         this.options.onResponse?.(service, response);
-        
+
         return response;
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+
       // Update state to error
       this.updateRequestState(service, {
-        status: 'error',
+        status: "error",
         progress: 0,
-        error: errorMessage
+        error: errorMessage,
       });
-      
+
       // Trigger onError callback
       this.options.onError?.(service, errorMessage);
-      
+
       // Re-throw to be caught by caller
       throw error;
     }
@@ -154,76 +173,80 @@ export class ConcurrentRequests {
    * Handle a streaming request
    */
   private async handleStreamingRequest(
-    service: ServiceName, 
-    client: AIClient, 
-    request: AIRequest
+    service: ServiceName,
+    client: AIClient,
+    request: AIRequest,
   ): Promise<AIResponse> {
     const startTime = Date.now();
-    let fullText = '';
-    
+    let fullText = "";
+
     return new Promise<AIResponse>((resolve, reject) => {
-      client.generateStreamingCompletion?.(
-        request,
-        (chunk) => {
+      client
+        .generateStreamingCompletion?.(request, (chunk) => {
           // Append to full text
           fullText += chunk.text;
-          
+
           // Calculate progress (approximate)
           // This is a naive implementation - in reality, we don't know the total length in advance
-          const progress = chunk.isComplete ? 100 : Math.min(95, (fullText.length / 500) * 100);
-          
+          const progress = chunk.isComplete
+            ? 100
+            : Math.min(95, (fullText.length / 500) * 100);
+
           // Update state
           this.updateRequestState(service, {
-            progress
+            progress,
           });
-          
+
           // Trigger callbacks
           this.options.onProgress?.(service, progress);
           this.options.onStreamChunk?.(service, chunk.text, chunk.isComplete);
-          
+
           // If complete, resolve with final response
           if (chunk.isComplete) {
             const endTime = Date.now();
             const executionTime = endTime - startTime;
-            
+
             const response: AIResponse = {
               text: fullText,
               model: request.options?.modelId || client.models[0],
-              executionTime
+              executionTime,
             };
-            
+
             // Update state to success
             this.updateRequestState(service, {
-              status: 'success',
+              status: "success",
               progress: 100,
-              response
+              response,
             });
-            
+
             // Trigger onResponse callback
             this.options.onResponse?.(service, response);
-            
+
             resolve(response);
           }
-        }
-      ).catch(error => {
-        reject(error);
-      });
+        })
+        .catch((error) => {
+          reject(error);
+        });
     });
   }
 
   /**
    * Update the state of a request
    */
-  private updateRequestState(service: ServiceName, updates: Partial<RequestState>) {
+  private updateRequestState(
+    service: ServiceName,
+    updates: Partial<RequestState>,
+  ) {
     const currentState = this.requestStates.get(service);
-    
+
     if (!currentState) {
       return;
     }
-    
+
     const newState = { ...currentState, ...updates };
     this.requestStates.set(service, newState);
-    
+
     // Trigger status change callback if status changed
     if (updates.status && updates.status !== currentState.status) {
       this.options.onStatusChange?.(service, updates.status);
@@ -238,12 +261,12 @@ export class ConcurrentRequests {
     // That would require AbortController support in the client implementations
     // This just updates the state to reflect cancellation
     for (const [service, state] of this.requestStates.entries()) {
-      if (state.status === 'loading' || state.status === 'streaming') {
+      if (state.status === "loading" || state.status === "streaming") {
         this.updateRequestState(service, {
-          status: 'error',
-          error: 'Request cancelled'
+          status: "error",
+          error: "Request cancelled",
         });
       }
     }
   }
-} 
+}

@@ -4,7 +4,9 @@ import { Response, TABLES } from "../models";
 /**
  * Get all responses for a prompt
  */
-export async function getResponsesForPrompt(promptId: string): Promise<Response[]> {
+export async function getResponsesForPrompt(
+  promptId: string,
+): Promise<Response[]> {
   const { data, error } = await supabase
     .from(TABLES.RESPONSES)
     .select("*")
@@ -22,7 +24,9 @@ export async function getResponsesForPrompt(promptId: string): Promise<Response[
 /**
  * Get a response by ID
  */
-export async function getResponseById(responseId: string): Promise<Response | null> {
+export async function getResponseById(
+  responseId: string,
+): Promise<Response | null> {
   const { data, error } = await supabase
     .from(TABLES.RESPONSES)
     .select("*")
@@ -45,7 +49,7 @@ export async function getResponseById(responseId: string): Promise<Response | nu
  * Create a new response
  */
 export async function createResponse(
-  response: Omit<Response, "id" | "created_at">
+  response: Omit<Response, "id" | "created_at">,
 ): Promise<Response> {
   const { data, error } = await supabase
     .from(TABLES.RESPONSES)
@@ -66,7 +70,7 @@ export async function createResponse(
  */
 export async function updateResponse(
   responseId: string,
-  updates: Partial<Omit<Response, "id" | "prompt_id" | "created_at">>
+  updates: Partial<Omit<Response, "id" | "prompt_id" | "created_at">>,
 ): Promise<Response> {
   const { data, error } = await supabase
     .from(TABLES.RESPONSES)
@@ -102,7 +106,7 @@ export async function deleteResponse(responseId: string): Promise<void> {
  * Create multiple responses at once (batch insert)
  */
 export async function createResponses(
-  responses: Omit<Response, "id" | "created_at">[]
+  responses: Omit<Response, "id" | "created_at">[],
 ): Promise<Response[]> {
   const { data, error } = await supabase
     .from(TABLES.RESPONSES)
@@ -115,4 +119,4 @@ export async function createResponses(
   }
 
   return data as Response[];
-} 
+}

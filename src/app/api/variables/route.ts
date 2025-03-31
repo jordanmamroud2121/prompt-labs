@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas, validateBody } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
-import { 
-  getUserVariables, 
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
+import {
+  getUserVariables,
   createVariable,
   upsertVariable,
 } from "@/lib/supabase/queries";
@@ -16,7 +19,7 @@ export async function GET() {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -36,7 +39,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Validate request body
     const [validatedData, validationError] = await validateBody(
       request,
-      schemas.variable
+      schemas.variable,
     );
 
     if (validationError) {
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
         userId,
         validatedData!.name,
         validatedData!.value,
-        validatedData!.description
+        validatedData!.description,
       );
     } else {
       // Create new variable
@@ -74,8 +77,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json(result, { 
-      status: isUpsert ? 200 : 201 
+    return NextResponse.json(result, {
+      status: isUpsert ? 200 : 201,
     });
   });
-} 
+}

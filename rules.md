@@ -10,7 +10,7 @@
 - **[CRITICAL]** NEVER touch code unrelated to the current task - stay focused only on requested changes
 - **[CRITICAL]** NEVER use JSON file storage under any circumstances - use proper database storage instead
 - **[CRITICAL]** NEVER hardcode secrets (API keys, passwords, tokens) directly in the code - use environment variables instead
-- **[CRITICAL]** DO NOT WRITE CODE unless the prompt includes the keyword "ACTION" - respond to questions with explanations, not code
+- **[CRITICAL]** DO NOT WRITE CODE or make any other changes if the prompt includes the keyword "NOACTION" - only respond to with explanations
 - **[CRITICAL]** When in doubt about any rule or guideline, ask clarifying questions rather than making assumptions
 - **[CRITICAL]** NEVER log, store, or expose sensitive user data (PII, financial information, credentials) - always handle user data with strict privacy controls
 - **[CRITICAL]** NEVER make direct changes to production environments without going through proper staging/testing - always follow the deployment process
@@ -47,7 +47,7 @@
 ## Naming Conventions - Follow these naming patterns for all code
 
 - **[NAMING-VARIABLES]** Use descriptive camelCase for all variables and functions (e.g., `getUserData`, `isLoading`, `fetchResults`)
-- **[NAMING-BOOLEAN]** Prefix all boolean variables with `is`, `has`, or `should` (e.g., `isActive`, `hasPermission`) 
+- **[NAMING-BOOLEAN]** Prefix all boolean variables with `is`, `has`, or `should` (e.g., `isActive`, `hasPermission`)
 - **[NAMING-COMPONENTS]** Use PascalCase for all React components (e.g., `UserProfile`, `NavigationBar`)
 - **[NAMING-TYPES]** Use PascalCase for all interfaces and types (e.g., `UserData`, `ApiResponse`)
 - **[NAMING-CONSTANTS]** Use UPPER_SNAKE_CASE for all constants (e.g., `MAX_RETRY_ATTEMPTS`, `API_BASE_URL`)
@@ -60,6 +60,29 @@
 - **[NAMING-GIT-BRANCHES]** Use kebab-case with descriptive prefix for Git branches (e.g., `feature/user-auth`, `bugfix/login-error`)
 - **[NAMING-DB-TABLES]** Use plural snake_case for all database tables (e.g., `user_profiles`, `auth_tokens`)
 - **[NAMING-DB-COLUMNS]** Use snake_case for all database columns (e.g., `first_name`, `created_at`)
+
+## File Naming Conventions - Follow these rules for all files across the project
+
+- **[FILE-NAMING-COMPONENTS]** Use PascalCase for all React component files (e.g., `UserCard.tsx`, `NavigationBar.tsx`)
+- **[FILE-NAMING-UTILITIES]** Use camelCase for utility/helper files (e.g., `formatDate.ts`, `apiHelpers.ts`)
+- **[FILE-NAMING-CONSTANTS]** Use camelCase for constant files (e.g., `colorPalette.ts`, `routePaths.ts`)
+- **[FILE-NAMING-TYPES]** Use PascalCase for type definition files (e.g., `UserTypes.ts`, `ApiTypes.ts`)
+- **[FILE-NAMING-HOOKS]** Prefix custom hook files with "use" and use camelCase (e.g., `useAuth.ts`, `useMediaQuery.ts`)
+- **[FILE-NAMING-CONTEXT]** Suffix context files with "Context" using PascalCase (e.g., `UserContext.tsx`, `ThemeContext.tsx`)
+- **[FILE-NAMING-API-ROUTES]** Use kebab-case for API route files (e.g., `user-profile.ts`, `auth-token.ts`)
+- **[FILE-NAMING-DESCRIPTION]** Ensure file names are descriptive and indicate the file's primary purpose
+- **[FILE-NAMING-LENGTH]** Keep file names concise yet descriptive - avoid excessively long names
+- **[FILE-NAMING-CONSISTENCY]** Maintain consistent naming patterns within each category of files
+
+## File Naming Clarity Rules - Follow these to ensure every file has a purpose-revealing name
+
+- **[FILE-NAMING-CLARITY]** Never use generic file names like `route.ts`, `api.ts`, or `utils.ts` - every file must have a descriptive purpose in its name
+- **[FILE-NAMING-ROUTES]** Name API route files after their functionality: `routeUserAuthentication.ts`, `routeProductCreation.ts` instead of just `route.ts`
+- **[FILE-NAMING-ENDPOINTS]** Use the pattern `route{Resource}{Action}.ts` for API endpoints (e.g., `routeUserProfile.ts`, `routeOrderSubmit.ts`)
+- **[FILE-NAMING-PAGES]** Name page files after their content: `pageUserDashboard.tsx`, `pageProductListing.tsx` instead of just `page.tsx`
+- **[FILE-NAMING-LAYOUTS]** Name layout files after their scope: `layoutAdminPanel.tsx`, `layoutCheckoutFlow.tsx` instead of just `layout.tsx`
+- **[FILE-NAMING-NO-DUPLICATES]** Never have two files with identical names anywhere in the project, regardless of their location
+- **[FILE-NAMING-SEARCHABILITY]** Optimize file names to be easily searchable in code editors and source control
 
 ## Folder Structure - Follow these rules when creating or modifying folders
 
@@ -137,7 +160,7 @@
 ## GitHub Guidelines - Follow these rules for all Git operations
 
 - **[GIT-PERMISSION]** Always ask for explicit permission before suggesting any push to GitHub - never assume permission
-- **[GIT-COMMIT-FORMAT]** Format all commit messages with a present-tense verb (e.g., "Add", "Fix", "Update") 
+- **[GIT-COMMIT-FORMAT]** Format all commit messages with a present-tense verb (e.g., "Add", "Fix", "Update")
 - **[GIT-COMMIT-LENGTH]** Keep commit message first lines under 50 characters - add details in subsequent lines
 - **[GIT-TESTS]** Always ensure all tests pass before requesting to push code - never push code with failing tests
 - **[GIT-FORMATTING]** Make sure code is properly formatted before requesting to push - run linters and formatters
@@ -178,7 +201,7 @@
 ## REMINDER: ALWAYS PRIORITIZE CRITICAL RULES
 
 - Always remember that the critical rules at the top of this document override all other guidelines
-- Never perform Git operations without explicit permission 
+- Never perform Git operations without explicit permission
 - Never modify .env files or critical configuration files without explicit permission
 - Never touch code unrelated to your current task
 - Never use JSON file storage or hardcode secrets

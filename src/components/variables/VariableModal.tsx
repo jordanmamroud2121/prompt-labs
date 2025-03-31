@@ -27,7 +27,11 @@ export default function VariableModal({
 
   useEffect(() => {
     if (isOpen) {
-      setVariables(initialVariables.length ? [...initialVariables] : [{ name: "", value: "" }]);
+      setVariables(
+        initialVariables.length
+          ? [...initialVariables]
+          : [{ name: "", value: "" }],
+      );
       setError(null);
     }
   }, [initialVariables, isOpen]);
@@ -45,7 +49,7 @@ export default function VariableModal({
   const handleVariableChange = (
     index: number,
     field: keyof Variable,
-    value: string
+    value: string,
   ) => {
     const newVariables = [...variables];
     newVariables[index] = { ...newVariables[index], [field]: value };
@@ -54,16 +58,16 @@ export default function VariableModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate form
-    const isEmpty = variables.some(v => !v.name.trim() || !v.value.trim());
+    const isEmpty = variables.some((v) => !v.name.trim() || !v.value.trim());
     if (isEmpty) {
       setError("Variable name and value are required");
       return;
     }
-    
+
     // Check for duplicate variable names
-    const names = variables.map(v => v.name.trim());
+    const names = variables.map((v) => v.name.trim());
     const hasDuplicates = names.some((name, i) => names.indexOf(name) !== i);
     if (hasDuplicates) {
       setError("Variable names must be unique");
@@ -166,4 +170,4 @@ export default function VariableModal({
       </div>
     </div>
   );
-} 
+}

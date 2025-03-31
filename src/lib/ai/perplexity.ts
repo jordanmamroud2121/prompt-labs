@@ -3,7 +3,9 @@ import { MODELS } from "./modelData";
 
 export class PerplexityClient implements AIClient {
   name = "Perplexity";
-  models = MODELS.filter(model => model.provider === "Perplexity").map(model => model.id);
+  models = MODELS.filter((model) => model.provider === "Perplexity").map(
+    (model) => model.id,
+  );
   supportsAttachments = false;
   supportsStreaming = true;
   private apiKey: string = "";
@@ -27,32 +29,34 @@ export class PerplexityClient implements AIClient {
 
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
-    
+
     try {
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           model,
           messages: [
-            { 
-              role: "user", 
-              content: request.prompt
-            }
+            {
+              role: "user",
+              content: request.prompt,
+            },
           ],
           max_tokens: request.options?.maxTokens,
           temperature: request.options?.temperature,
           top_p: request.options?.topP,
-          stream: false
-        })
+          stream: false,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || `Perplexity API error: ${response.status}`);
+        throw new Error(
+          error.error?.message || `Perplexity API error: ${response.status}`,
+        );
       }
 
       const data = await response.json();
@@ -63,7 +67,7 @@ export class PerplexityClient implements AIClient {
         text: data.choices[0].message.content,
         model: data.model,
         executionTime,
-        tokensUsed: data.usage?.total_tokens
+        tokensUsed: data.usage?.total_tokens,
       };
     } catch (error) {
       const endTime = Date.now();
@@ -72,14 +76,14 @@ export class PerplexityClient implements AIClient {
         text: "",
         model,
         executionTime,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   async generateStreamingCompletion(
     request: AIRequest,
-    onChunk: (chunk: StreamingChunk) => void
+    onChunk: (chunk: StreamingChunk) => void,
   ): Promise<void> {
     if (!this.apiKey) {
       throw new Error("Perplexity API key is required");
@@ -92,26 +96,28 @@ export class PerplexityClient implements AIClient {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${this.apiKey}`
+          Authorization: `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({
           model,
           messages: [
-            { 
-              role: "user", 
-              content: request.prompt
-            }
+            {
+              role: "user",
+              content: request.prompt,
+            },
           ],
           max_tokens: request.options?.maxTokens,
           temperature: request.options?.temperature,
           top_p: request.options?.topP,
-          stream: true
-        })
+          stream: true,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || `Perplexity API error: ${response.status}`);
+        throw new Error(
+          error.error?.message || `Perplexity API error: ${response.status}`,
+        );
       }
 
       if (!response.body) {
@@ -125,7 +131,7 @@ export class PerplexityClient implements AIClient {
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
-        
+
         if (done) {
           onChunk({ text: "", isComplete: true });
           break;
@@ -133,24 +139,24 @@ export class PerplexityClient implements AIClient {
 
         const chunk = decoder.decode(value);
         const lines = chunk
-          .split('\n')
-          .filter(line => line.trim() !== '')
-          .map(line => line.replace(/^data: /, ''));
+          .split("\n")
+          .filter((line) => line.trim() !== "")
+          .map((line) => line.replace(/^data: /, ""));
 
         for (const line of lines) {
-          if (line === '[DONE]') {
+          if (line === "[DONE]") {
             onChunk({ text: "", isComplete: true });
             break;
           }
 
           try {
             const json = JSON.parse(line);
-            const content = json.choices[0]?.delta?.content || '';
+            const content = json.choices[0]?.delta?.content || "";
             if (content) {
               onChunk({ text: content, isComplete: false });
             }
           } catch (e) {
-            console.error('Error parsing Perplexity stream:', e);
+            console.error("Error parsing Perplexity stream:", e);
           }
         }
       }
@@ -166,7 +172,7 @@ export class PerplexityClient implements AIClient {
     if (modelId && this.models.includes(modelId)) {
       return modelId;
     }
-    
+
     // Otherwise use default model
     return this.defaultModel;
   }
@@ -175,8 +181,8 @@ export class PerplexityClient implements AIClient {
     try {
       const response = await fetch(`${this.baseUrl}/models`, {
         headers: {
-          "Authorization": `Bearer ${apiKey}`
-        }
+          Authorization: `Bearer ${apiKey}`,
+        },
       });
       return response.ok;
     } catch (error) {
@@ -184,4 +190,4 @@ export class PerplexityClient implements AIClient {
       return false;
     }
   }
-} 
+}

@@ -15,7 +15,10 @@ export default function Header() {
   // Close settings dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+      if (
+        settingsRef.current &&
+        !settingsRef.current.contains(event.target as Node)
+      ) {
         setIsSettingsOpen(false);
       }
     }
@@ -45,7 +48,7 @@ export default function Header() {
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </button>
-            
+
             {isSettingsOpen && (
               <div className="absolute right-0 mt-2 w-72 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 z-10 max-h-[80vh] overflow-y-auto">
                 {/* API Key Manager Button */}
@@ -56,14 +59,14 @@ export default function Header() {
                   <Key className="mr-2 h-4 w-4" />
                   <span>Manage API Keys</span>
                 </button>
-                
+
                 {/* Show API Key Manager if button is clicked */}
                 {showAPIKeyManager && (
                   <div className="px-4 py-3 border-t border-gray-100">
                     <APIKeyManager />
                   </div>
                 )}
-                
+
                 {/* Logout Button */}
                 <div className="border-t border-gray-100">
                   <button
@@ -84,4 +87,4 @@ export default function Header() {
       </div>
     </header>
   );
-} 
+}

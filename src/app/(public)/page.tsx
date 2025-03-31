@@ -1,27 +1,31 @@
 "use client";
 
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { navigationItems, authNavigationItems } from '@/config/navigation';
-import { APP_NAME, APP_DESCRIPTION } from '@/config/constants';
-import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { navigationItems, authNavigationItems } from "@/config/navigation";
+import { APP_NAME, APP_DESCRIPTION } from "@/config/constants";
+import { useAuth } from "@/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
-  
+
   // Redirect to dashboard if authenticated
   useEffect(() => {
     if (isAuthenticated && !isLoading) {
-      router.push('/dashboard');
+      router.push("/dashboard");
     }
   }, [isAuthenticated, isLoading, router]);
-  
+
   // Don't render anything if loading or authenticated (will redirect)
   if (isLoading || isAuthenticated) {
-    return <div className="flex h-screen items-center justify-center">Loading...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -35,39 +39,35 @@ export default function Home() {
       <div className="flex flex-col items-center justify-center">
         <h1 className="text-4xl font-bold mb-4">{APP_NAME}</h1>
         <p className="text-xl mb-8">{APP_DESCRIPTION}</p>
-        
+
         <div className="grid gap-4">
           <div className="flex gap-4">
             {authNavigationItems.map((item) => (
               <Button key={item.name} asChild>
-                <Link href={item.href}>
-                  {item.name}
-                </Link>
+                <Link href={item.href}>{item.name}</Link>
               </Button>
             ))}
           </div>
-          
+
           <div className="flex gap-4 mt-4">
             {navigationItems
               .filter((item) => !item.requiresAuth)
               .map((item) => (
                 <Button key={item.name} variant="outline" asChild>
-                  <Link href={item.href}>
-                    {item.name}
-                  </Link>
+                  <Link href={item.href}>{item.name}</Link>
                 </Button>
               ))}
           </div>
         </div>
       </div>
-      
+
       <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-3 lg:text-left mt-16">
         <Link
           href="/login"
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
         >
           <h2 className="mb-3 text-2xl font-semibold">
-            Login{' '}
+            Login{" "}
             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
               &rarr;
             </span>
@@ -82,7 +82,7 @@ export default function Home() {
           className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
         >
           <h2 className="mb-3 text-2xl font-semibold">
-            Sign Up{' '}
+            Sign Up{" "}
             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
               &rarr;
             </span>
@@ -99,7 +99,7 @@ export default function Home() {
           rel="noopener noreferrer"
         >
           <h2 className="mb-3 text-2xl font-semibold">
-            ShadCN UI{' '}
+            ShadCN UI{" "}
             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
               &rarr;
             </span>
@@ -111,4 +111,4 @@ export default function Home() {
       </div>
     </main>
   );
-} 
+}

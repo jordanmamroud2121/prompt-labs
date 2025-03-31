@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
-import { 
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
+import {
   createResponse,
   getPromptById,
-  createResponses
+  createResponses,
 } from "@/lib/supabase/queries";
 import { supabase } from "@/lib/supabase/client";
 
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
     const userId = data.session?.user?.id;
-    
+
     if (!userId) {
       return createErrorResponse("Unauthorized", 401);
     }
@@ -35,7 +38,7 @@ export async function POST(request: NextRequest) {
     const contentType = request.headers.get("content-type") || "";
     if (contentType.includes("application/json")) {
       const body = await request.json();
-      
+
       // Check if it's an array (batch operation)
       if (Array.isArray(body)) {
         return await handleBatchResponses(body, userId);
@@ -44,7 +47,7 @@ export async function POST(request: NextRequest) {
         return await handleSingleResponse(body, userId);
       }
     }
-    
+
     return createErrorResponse("Invalid content type", 400);
   });
 }
@@ -56,24 +59,24 @@ async function handleSingleResponse(body: unknown, userId: string) {
   // Validate request body
   const schema = schemas.response;
   const result = schema.safeParse(body);
-  
+
   if (!result.success) {
     return createErrorResponse(
       "Validation error",
       400,
       "VALIDATION_ERROR",
-      result.error.format()
+      result.error.format(),
     );
   }
-  
+
   const validatedData = result.data as ResponseData;
-  
+
   // Verify prompt belongs to user
   const prompt = await getPromptById(validatedData.prompt_id);
   if (!prompt || prompt.user_id !== userId) {
     return createErrorResponse("Prompt not found or access denied", 404);
   }
-  
+
   // Create new response
   const newResponse = await createResponse({
     prompt_id: validatedData.prompt_id,
@@ -83,7 +86,7 @@ async function handleSingleResponse(body: unknown, userId: string) {
     tokens_used: validatedData.tokens_used,
     error: validatedData.error,
   });
-  
+
   return NextResponse.json(newResponse, { status: 201 });
 }
 
@@ -95,7 +98,7 @@ async function handleBatchResponses(items: unknown[], userId: string) {
   const schema = schemas.response;
   const validatedItems: ResponseData[] = [];
   const errors = [];
-  
+
   for (let i = 0; i < items.length; i++) {
     const result = schema.safeParse(items[i]);
     if (!result.success) {
@@ -107,29 +110,29 @@ async function handleBatchResponses(items: unknown[], userId: string) {
       validatedItems.push(result.data as ResponseData);
     }
   }
-  
+
   if (errors.length > 0) {
     return createErrorResponse(
       "Validation errors in batch",
       400,
       "BATCH_VALIDATION_ERROR",
-      errors
+      errors,
     );
   }
-  
+
   // Verify all prompts belong to user
-  const promptIds = [...new Set(validatedItems.map(item => item.prompt_id))];
+  const promptIds = [...new Set(validatedItems.map((item) => item.prompt_id))];
   for (const promptId of promptIds) {
     const prompt = await getPromptById(promptId);
     if (!prompt || prompt.user_id !== userId) {
       return createErrorResponse(
         `Prompt with ID ${promptId} not found or access denied`,
-        404
+        404,
       );
     }
   }
-  
+
   // Create all responses
   const newResponses = await createResponses(validatedItems);
   return NextResponse.json(newResponses, { status: 201 });
-} 
+}

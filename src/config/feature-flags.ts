@@ -8,15 +8,15 @@ export type FeatureFlag = {
 
 export const featureFlags: Record<string, FeatureFlag> = {
   SKIP_AUTH: {
-    name: 'Skip Authentication',
-    description: 'Bypass authentication in development mode',
-    enabled: process.env.NEXT_PUBLIC_SKIP_AUTH === 'true',
+    name: "Skip Authentication",
+    description: "Bypass authentication in development mode",
+    enabled: process.env.NEXT_PUBLIC_SKIP_AUTH === "true",
     defaultValue: false,
-    envKey: 'NEXT_PUBLIC_SKIP_AUTH',
+    envKey: "NEXT_PUBLIC_SKIP_AUTH",
   },
   DARK_MODE: {
-    name: 'Dark Mode',
-    description: 'Enable dark mode theme',
+    name: "Dark Mode",
+    description: "Enable dark mode theme",
     enabled: true,
     defaultValue: true,
   },
@@ -27,6 +27,6 @@ export function isFeatureEnabled(featureKey: string): boolean {
   if (!feature) {
     return false;
   }
-  
+
   return feature.enabled;
-} 
+}

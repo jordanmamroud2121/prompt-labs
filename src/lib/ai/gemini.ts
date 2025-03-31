@@ -3,7 +3,9 @@ import { MODELS } from "./modelData";
 
 export class GeminiClient implements AIClient {
   name = "Google Gemini";
-  models = MODELS.filter(model => model.provider === "Google").map(model => model.id);
+  models = MODELS.filter((model) => model.provider === "Google").map(
+    (model) => model.id,
+  );
   supportsAttachments = true;
   supportsStreaming = true;
   private apiKey: string = "";
@@ -12,15 +14,17 @@ export class GeminiClient implements AIClient {
 
   constructor(apiKey?: string) {
     console.log("GeminiClient constructor called, apiKey provided:", !!apiKey);
-    
+
     if (apiKey) {
       this.apiKey = apiKey;
       console.log("API key set from provided key");
     } else {
-      console.log("No API key provided in constructor, checking environment variables");
+      console.log(
+        "No API key provided in constructor, checking environment variables",
+      );
       // Try to get the API key from environment variables
       const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      
+
       if (envKey) {
         this.apiKey = envKey;
         console.log("API key loaded from environment variables");
@@ -28,9 +32,12 @@ export class GeminiClient implements AIClient {
         console.warn("No API key found in environment variables either");
       }
     }
-    
+
     // Log the state of the API key
-    console.log("Gemini API key available after initialization:", !!this.apiKey);
+    console.log(
+      "Gemini API key available after initialization:",
+      !!this.apiKey,
+    );
   }
 
   setApiKey(apiKey: string) {
@@ -42,50 +49,50 @@ export class GeminiClient implements AIClient {
     console.log("Request details:", {
       promptLength: request.prompt.length,
       modelRequested: request.options?.modelId || this.defaultModel,
-      attachments: request.attachments?.length || 0
+      attachments: request.attachments?.length || 0,
     });
-    
+
     // Make one more attempt to get the API key if it's not set
     if (!this.apiKey) {
       console.log("No API key set, using server-side proxy");
     }
-    
+
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
-    
+
     try {
       console.log(`Preparing Gemini API call to ${model}`);
-      
+
       const requestBody = {
         model,
         prompt: request.prompt,
         temperature: request.options?.temperature,
         top_p: request.options?.topP,
-        max_tokens: request.options?.maxTokens
+        max_tokens: request.options?.maxTokens,
       };
-      
+
       console.log("Request body:", JSON.stringify(requestBody));
 
       // Make the API request via our server-side proxy
       const response = await fetch("/api/ai/gemini", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       console.log("Gemini API response status:", response.status);
-      
+
       // Check for response issues
       if (!response.ok) {
         let errorMessage = `Gemini API error: Status ${response.status}`;
-        
+
         try {
           // Try to parse the error response
           const errorData = await response.json();
           console.error("Gemini API error data:", errorData);
-          
+
           if (errorData.error?.message) {
             errorMessage = errorData.error.message;
           }
@@ -101,19 +108,19 @@ export class GeminiClient implements AIClient {
             console.error("Error getting response text:", e);
           }
         }
-        
+
         throw new Error(errorMessage);
       }
 
       // Process the successful response
       const data = await response.json();
       console.log("Gemini API response data:", data);
-      
+
       const endTime = Date.now();
       const executionTime = endTime - startTime;
 
       // Extract the text from the response
-      const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
       console.log(`Extracted content text (${contentText.length} chars)`);
 
       if (!contentText) {
@@ -124,7 +131,7 @@ export class GeminiClient implements AIClient {
         text: contentText,
         model,
         executionTime,
-        tokensUsed: data.usageMetadata?.totalTokenCount
+        tokensUsed: data.usageMetadata?.totalTokenCount,
       };
     } catch (error) {
       const endTime = Date.now();
@@ -133,14 +140,14 @@ export class GeminiClient implements AIClient {
         text: "",
         model,
         executionTime,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   async generateStreamingCompletion(
     request: AIRequest,
-    onChunk: (chunk: StreamingChunk) => void
+    onChunk: (chunk: StreamingChunk) => void,
   ): Promise<void> {
     if (!this.apiKey) {
       throw new Error("Gemini API key is required");
@@ -149,29 +156,34 @@ export class GeminiClient implements AIClient {
     const model = this.getModelFromRequest(request);
 
     try {
-      const response = await fetch(`${this.baseUrl}/models/${model}:streamGenerateContent?key=${this.apiKey}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+      const response = await fetch(
+        `${this.baseUrl}/models/${model}:streamGenerateContent?key=${this.apiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                role: "user",
+                parts: [{ text: request.prompt }],
+              },
+            ],
+            generationConfig: {
+              temperature: request.options?.temperature,
+              topP: request.options?.topP,
+              maxOutputTokens: request.options?.maxTokens,
+            },
+          }),
         },
-        body: JSON.stringify({
-          contents: [
-            { 
-              role: "user", 
-              parts: [{ text: request.prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: request.options?.temperature,
-            topP: request.options?.topP,
-            maxOutputTokens: request.options?.maxTokens
-          }
-        })
-      });
+      );
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
+        throw new Error(
+          error.error?.message || `Gemini API error: ${response.status}`,
+        );
       }
 
       if (!response.body) {
@@ -185,7 +197,7 @@ export class GeminiClient implements AIClient {
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
-        
+
         if (done) {
           onChunk({ text: "", isComplete: true });
           break;
@@ -193,22 +205,22 @@ export class GeminiClient implements AIClient {
 
         const chunk = decoder.decode(value);
         // Gemini returns newline-delimited JSON objects
-        const lines = chunk.split('\n').filter(line => line.trim());
+        const lines = chunk.split("\n").filter((line) => line.trim());
 
         for (const line of lines) {
           try {
             const json = JSON.parse(line);
-            const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            
+            const text = json.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
             if (text) {
               onChunk({ text, isComplete: false });
             }
           } catch (e) {
-            console.error('Error parsing Gemini stream:', e);
+            console.error("Error parsing Gemini stream:", e);
           }
         }
       }
-      
+
       // Signal completion
       onChunk({ text: "", isComplete: true });
     } catch (error) {
@@ -220,11 +232,15 @@ export class GeminiClient implements AIClient {
   private getModelFromRequest(request: AIRequest): string {
     // Check if model ID was passed directly in the request and is valid
     const requestedModelId = request.options?.modelId;
-    
-    if (requestedModelId && typeof requestedModelId === 'string' && this.models.includes(requestedModelId)) {
+
+    if (
+      requestedModelId &&
+      typeof requestedModelId === "string" &&
+      this.models.includes(requestedModelId)
+    ) {
       return requestedModelId;
     }
-    
+
     // Otherwise use default model
     return this.defaultModel;
   }
@@ -239,4 +255,4 @@ export class GeminiClient implements AIClient {
       return false;
     }
   }
-} 
+}

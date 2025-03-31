@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas, validateBody } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
 import {
   getVariableById,
   updateVariable,
@@ -13,7 +16,7 @@ import { supabase } from "@/lib/supabase/client";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   return withErrorHandling(async () => {
     // Get user ID from session
@@ -41,7 +44,7 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   return withErrorHandling(async () => {
     // Get user ID from session
@@ -63,7 +66,7 @@ export async function PUT(
     // Validate request body
     const [validatedData, validationError] = await validateBody(
       request,
-      schemas.variable.partial()
+      schemas.variable.partial(),
     );
 
     if (validationError) {
@@ -82,7 +85,7 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: string } },
 ) {
   return withErrorHandling(async () => {
     // Get user ID from session
@@ -106,7 +109,7 @@ export async function DELETE(
 
     return NextResponse.json(
       { message: "Variable deleted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   });
-} 
+}

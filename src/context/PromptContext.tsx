@@ -68,11 +68,11 @@ const PromptContext = createContext<PromptContextType | undefined>(undefined);
 
 // Fix the provider to service mapping with proper type safety
 const PROVIDER_TO_SERVICE: Record<string, ServiceName> = {
-  'openai': 'openai',
-  'anthropic': 'anthropic',
-  'google': 'gemini',
-  'deepseek': 'deepseek',
-  'perplexity': 'perplexity'
+  openai: "openai",
+  anthropic: "anthropic",
+  google: "gemini",
+  deepseek: "deepseek",
+  perplexity: "perplexity",
 } as const;
 
 export function PromptProvider({ children }: { children: React.ReactNode }) {
@@ -83,10 +83,22 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   // Log API keys for troubleshooting (keys will be masked for security)
   useEffect(() => {
     if (apiKeyContext) {
-      console.log("Available API services:", Object.keys(apiKeyContext.apiKeys || {}));
-      console.log("OpenAI key available in context:", !!apiKeyContext.apiKeys?.openai);
-      console.log("OpenAI key validation status:", apiKeyContext.validationStatus?.openai);
-      console.log("Using environment variables:", apiKeyContext.usingEnvVars?.openai);
+      console.log(
+        "Available API services:",
+        Object.keys(apiKeyContext.apiKeys || {}),
+      );
+      console.log(
+        "OpenAI key available in context:",
+        !!apiKeyContext.apiKeys?.openai,
+      );
+      console.log(
+        "OpenAI key validation status:",
+        apiKeyContext.validationStatus?.openai,
+      );
+      console.log(
+        "Using environment variables:",
+        apiKeyContext.usingEnvVars?.openai,
+      );
     }
   }, [apiKeyContext]);
 
@@ -145,28 +157,34 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     setState((prevState) => {
       // Create new attachments array
       const newAttachments = [...prevState.attachments, file];
-      const hasImages = newAttachments.some(file => file.type.startsWith('image/'));
-      
+      const hasImages = newAttachments.some((file) =>
+        file.type.startsWith("image/"),
+      );
+
       // Get compatible models in a type-safe way
-      const compatibleModels = MODELS
-        .filter(model => model.capabilities.images && prevState.selectedModels.includes(model.id))
-        .map(model => model.id);
-      
+      const compatibleModels = MODELS.filter(
+        (model) =>
+          model.capabilities.images &&
+          prevState.selectedModels.includes(model.id),
+      ).map((model) => model.id);
+
       // Check if we need to filter out models
-      const shouldFilterModels = hasImages && compatibleModels.length < prevState.selectedModels.length;
-      
+      const shouldFilterModels =
+        hasImages && compatibleModels.length < prevState.selectedModels.length;
+
       // Prepare the new state
       const newState: Partial<PromptState> = {
         attachments: newAttachments,
         hasAttachments: true,
       };
-      
+
       // Update selected models if needed
       if (shouldFilterModels) {
         newState.selectedModels = compatibleModels;
-        newState.errorMessage = "Some selected models don't support image attachments and have been removed.";
+        newState.errorMessage =
+          "Some selected models don't support image attachments and have been removed.";
       }
-      
+
       return { ...prevState, ...newState };
     });
   }, []);
@@ -191,16 +209,19 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
-  const applyTemplateToPrompt = useCallback((templateId: string, templateText: string) => {
-    setState((prev) => ({
-      ...prev,
-      promptText: templateText,
-      selectedTemplateId: templateId,
-    }));
-  }, []);
+  const applyTemplateToPrompt = useCallback(
+    (templateId: string, templateText: string) => {
+      setState((prev) => ({
+        ...prev,
+        promptText: templateText,
+        selectedTemplateId: templateId,
+      }));
+    },
+    [],
+  );
 
   const clearError = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       errorMessage: null,
     }));
@@ -210,22 +231,26 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   const getCompatibleModels = useCallback((): string[] => {
     // Return early if we don't have attachments
     if (!state.hasAttachments || state.attachments.length === 0) {
-      return MODELS.map(model => model.id);
+      return MODELS.map((model) => model.id);
     }
-    
-    const hasImages = state.attachments.some(file => file.type.startsWith('image/'));
-    const hasAudio = state.attachments.some(file => file.type.startsWith('audio/'));
-    const hasVideo = state.attachments.some(file => file.type.startsWith('video/'));
-    
+
+    const hasImages = state.attachments.some((file) =>
+      file.type.startsWith("image/"),
+    );
+    const hasAudio = state.attachments.some((file) =>
+      file.type.startsWith("audio/"),
+    );
+    const hasVideo = state.attachments.some((file) =>
+      file.type.startsWith("video/"),
+    );
+
     // Return filtered models based on capabilities
-    return MODELS
-      .filter(model => {
-        if (hasImages && !model.capabilities.images) return false;
-        if (hasAudio && !model.capabilities.audio) return false;
-        if (hasVideo && !model.capabilities.video) return false;
-        return true;
-      })
-      .map(model => model.id);
+    return MODELS.filter((model) => {
+      if (hasImages && !model.capabilities.images) return false;
+      if (hasAudio && !model.capabilities.audio) return false;
+      if (hasVideo && !model.capabilities.video) return false;
+      return true;
+    }).map((model) => model.id);
   }, [state.hasAttachments, state.attachments]);
 
   const validatePrompt = useCallback((): boolean => {
@@ -257,14 +282,14 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     if (state.hasAttachments) {
       const compatibleModels = getCompatibleModels();
       const incompatibleModels = state.selectedModels.filter(
-        modelId => !compatibleModels.includes(modelId)
+        (modelId) => !compatibleModels.includes(modelId),
       );
-      
+
       if (incompatibleModels.length > 0) {
         const incompatibleNames = incompatibleModels
-          .map(id => MODELS.find(m => m.id === id)?.name || id)
-          .join(', ');
-        
+          .map((id) => MODELS.find((m) => m.id === id)?.name || id)
+          .join(", ");
+
         setState((prev) => ({
           ...prev,
           validationMessage: `The following models don't support the attached files: ${incompatibleNames}`,
@@ -274,16 +299,23 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     }
 
     return true;
-  }, [state.promptText, state.selectedModels, state.hasAttachments, getCompatibleModels]);
+  }, [
+    state.promptText,
+    state.selectedModels,
+    state.hasAttachments,
+    getCompatibleModels,
+  ]);
 
   const handlePromptSubmit = useCallback(async () => {
     console.log("=== PROMPT SUBMISSION STARTED ===");
     console.log("State:", {
-      promptText: state.promptText.substring(0, 100) + (state.promptText.length > 100 ? "..." : ""),
+      promptText:
+        state.promptText.substring(0, 100) +
+        (state.promptText.length > 100 ? "..." : ""),
       selectedModels: state.selectedModels,
       hasUser: !!user,
-      userId: user?.id || 'anonymous',
-      apiKeysAvailable: Object.keys(apiKeyContext?.apiKeys || {})
+      userId: user?.id || "anonymous",
+      apiKeysAvailable: Object.keys(apiKeyContext?.apiKeys || {}),
     });
 
     // Validate the prompt before submission
@@ -293,21 +325,25 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Set loading state
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       isLoading: true,
       responses: {},
       responseTimes: {},
-      progressStatus: Object.fromEntries(prev.selectedModels.map(model => [model, 0]))
+      progressStatus: Object.fromEntries(
+        prev.selectedModels.map((model) => [model, 0]),
+      ),
     }));
 
     try {
       // Save prompt to database
       const promptRecord = await createPrompt({
-        user_id: user?.id || 'anonymous',
+        user_id: user?.id || "anonymous",
         prompt_text: state.promptText,
         is_favorite: false,
-        attachments: state.hasAttachments ? state.attachments.map(file => URL.createObjectURL(file)) : undefined,
+        attachments: state.hasAttachments
+          ? state.attachments.map((file) => URL.createObjectURL(file))
+          : undefined,
         template_id: state.selectedTemplateId || undefined,
       });
 
@@ -319,51 +355,58 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
           const startTime = Date.now();
 
           // Get model information
-          const modelInfo = MODELS.find(m => m.id === modelId);
+          const modelInfo = MODELS.find((m) => m.id === modelId);
           if (!modelInfo) {
             throw new Error(`Unknown model: ${modelId}`);
           }
 
           // Map provider to correct service name using our mapping
           const providerName = modelInfo.provider.toLowerCase();
-          const service = PROVIDER_TO_SERVICE[providerName] || (() => {
-            throw new Error(`Unknown service for provider: ${modelInfo.provider}`);
-          })();
+          const service =
+            PROVIDER_TO_SERVICE[providerName] ||
+            (() => {
+              throw new Error(
+                `Unknown service for provider: ${modelInfo.provider}`,
+              );
+            })();
 
-          console.log(`Processing request for model ${modelId} using ${service} service`);
+          console.log(
+            `Processing request for model ${modelId} using ${service} service`,
+          );
 
           // Update progress status to show we're starting
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             progressStatus: {
               ...prev.progressStatus,
-              [modelId]: 5 // 5% - started
-            }
+              [modelId]: 5, // 5% - started
+            },
           }));
 
           // Check if we have the necessary API key
           const userApiKey = apiKeyContext?.apiKeys?.[service];
-          const envApiKey = process.env[`NEXT_PUBLIC_${service.toUpperCase()}_API_KEY`];
-          
+          const envApiKey =
+            process.env[`NEXT_PUBLIC_${service.toUpperCase()}_API_KEY`];
+
           console.log(`API key status for ${service}:`, {
             userKeyAvailable: !!userApiKey,
-            envKeyAvailable: !!envApiKey
+            envKeyAvailable: !!envApiKey,
           });
 
           // Initialize the client
           const client = await initializeClient(service, userApiKey);
           console.log(`Client initialized for ${service}:`, {
             hasClient: !!client,
-            clientType: client?.constructor?.name
+            clientType: client?.constructor?.name,
           });
-          
+
           // Update progress status
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             progressStatus: {
               ...prev.progressStatus,
-              [modelId]: 20 // 20% - client initialized
-            }
+              [modelId]: 20, // 20% - client initialized
+            },
           }));
 
           console.log(`Sending prompt to ${modelId}...`);
@@ -373,23 +416,23 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
             options: {
               modelId,
               temperature: 0.7,
-              maxTokens: 2048
-            }
+              maxTokens: 2048,
+            },
           });
-          
+
           console.log(`Received response from ${modelId}`);
-          
+
           // Calculate time taken
           const endTime = Date.now();
           const timeTaken = endTime - startTime;
 
           // Update progress to indicate completion
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             progressStatus: {
               ...prev.progressStatus,
-              [modelId]: 100 // 100% - completed
-            }
+              [modelId]: 100, // 100% - completed
+            },
           }));
 
           // Save the response to database
@@ -405,16 +448,16 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
           }
 
           // Add response to state
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             responses: {
               ...prev.responses,
-              [modelId]: response.text
+              [modelId]: response.text,
             },
             responseTimes: {
               ...prev.responseTimes,
-              [modelId]: timeTaken
-            }
+              [modelId]: timeTaken,
+            },
           }));
 
           // And then add logging for the response
@@ -422,28 +465,34 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
             responseLength: response.text.length,
             executionTime: timeTaken,
             hasError: !!response.error,
-            errorText: response.error
+            errorText: response.error,
           });
           // If the response looks suspicious (like a mock), log it
-          if (response.text.includes("This is a mock response") || response.text.includes("API key is required")) {
-            console.warn("POSSIBLE MOCK RESPONSE DETECTED:", response.text.substring(0, 100));
+          if (
+            response.text.includes("This is a mock response") ||
+            response.text.includes("API key is required")
+          ) {
+            console.warn(
+              "POSSIBLE MOCK RESPONSE DETECTED:",
+              response.text.substring(0, 100),
+            );
           }
 
           return { modelId, success: true };
         } catch (error) {
           console.error(`Error with model ${modelId}:`, error);
-          
+
           // Add error response to state
-          setState(prev => ({
+          setState((prev) => ({
             ...prev,
             responses: {
               ...prev.responses,
-              [modelId]: `Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`
+              [modelId]: `Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`,
             },
             progressStatus: {
               ...prev.progressStatus,
-              [modelId]: 100 // 100% but with error
-            }
+              [modelId]: 100, // 100% but with error
+            },
           }));
 
           return { modelId, success: false, error };
@@ -454,26 +503,27 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       await Promise.all(modelRequests);
     } catch (error) {
       console.error("Error submitting prompt:", error);
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        errorMessage: error instanceof Error ? error.message : "Error submitting prompt"
+        errorMessage:
+          error instanceof Error ? error.message : "Error submitting prompt",
       }));
     } finally {
       // Clear loading state
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        isLoading: false
+        isLoading: false,
       }));
     }
   }, [
-    state.promptText, 
-    state.selectedModels, 
-    state.hasAttachments, 
+    state.promptText,
+    state.selectedModels,
+    state.hasAttachments,
     state.attachments,
     state.selectedTemplateId,
-    user?.id,
     apiKeyContext,
-    validatePrompt
+    validatePrompt,
+    user,
   ]);
 
   const value = useMemo(
@@ -506,7 +556,7 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       validatePrompt,
       getCompatibleModels,
       clearError,
-    ]
+    ],
   );
 
   return (

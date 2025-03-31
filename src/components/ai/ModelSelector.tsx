@@ -7,37 +7,34 @@ import { useAPIKeys } from "@/context/APIKeyContext";
 import { MODELS, AIModel, AIProvider } from "@/lib/ai/modelData";
 
 export default function ModelSelector() {
-  const { 
-    selectedModels, 
-    setSelectedModels, 
-    attachments,
-    getCompatibleModels 
-  } = usePrompt();
-  const { 
-    hasValidApiKeyFor, 
+  const { selectedModels, setSelectedModels, getCompatibleModels } =
+    usePrompt();
+  const {
+    hasValidApiKeyFor,
     apiKeys,
-    isLoading: isLoadingApiKeys
+    isLoading: isLoadingApiKeys,
   } = useAPIKeys();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Use useMemo for compatibleModelIds to avoid recalculation on every render
-  const compatibleModelIds = useMemo(() => getCompatibleModels(), 
-    // Fix dependency array to remove complex expression
-    [getCompatibleModels, attachments.length]
+  const compatibleModelIds = useMemo(
+    () => getCompatibleModels(),
+    // Fix dependency array to only include the function
+    [getCompatibleModels],
   );
 
   // Filter models to only show ones from OpenAI and Google (we have env vars for these)
   // as well as any other providers the user has API keys for
   const availableModels = useMemo(() => {
-    return MODELS.filter(model => {
+    return MODELS.filter((model) => {
       const provider = model.provider.toLowerCase();
-      
+
       // Always show OpenAI and Google models
-      if (provider === 'openai' || provider === 'google') {
+      if (provider === "openai" || provider === "google") {
         return true;
       }
-      
+
       // Only show other models if we have API keys for them
       return apiKeys[provider] !== undefined;
     });
@@ -46,13 +43,20 @@ export default function ModelSelector() {
   // Group available models by provider
   const modelsByProvider = useMemo(() => {
     // Get unique providers from available models
-    const providers = Array.from(new Set(availableModels.map(model => model.provider))) as AIProvider[];
-    
+    const providers = Array.from(
+      new Set(availableModels.map((model) => model.provider)),
+    ) as AIProvider[];
+
     // Group models by provider
-    return providers.reduce((acc, provider) => {
-      acc[provider] = availableModels.filter(model => model.provider === provider);
-      return acc;
-    }, {} as Record<AIProvider, AIModel[]>);
+    return providers.reduce(
+      (acc, provider) => {
+        acc[provider] = availableModels.filter(
+          (model) => model.provider === provider,
+        );
+        return acc;
+      },
+      {} as Record<AIProvider, AIModel[]>,
+    );
   }, [availableModels]);
 
   // Get list of available providers (ones we're displaying)
@@ -62,24 +66,26 @@ export default function ModelSelector() {
 
   // Load user preferences from localStorage on mount
   useEffect(() => {
-    const savedModels = localStorage.getItem('selectedModels');
+    const savedModels = localStorage.getItem("selectedModels");
     if (savedModels) {
       try {
         const parsedModels = JSON.parse(savedModels);
         if (Array.isArray(parsedModels) && parsedModels.length > 0) {
           // Filter out any models that might not be compatible with current attachments
           // and from providers we don't have API keys for
-          const modelIds = availableModels.map(model => model.id);
-          const filteredModels = parsedModels.filter(modelId => 
-            compatibleModelIds.includes(modelId) && modelIds.includes(modelId)
+          const modelIds = availableModels.map((model) => model.id);
+          const filteredModels = parsedModels.filter(
+            (modelId) =>
+              compatibleModelIds.includes(modelId) &&
+              modelIds.includes(modelId),
           );
-          
+
           if (filteredModels.length > 0) {
             setSelectedModels(filteredModels);
           }
         }
       } catch (error) {
-        console.error('Error parsing saved models:', error);
+        console.error("Error parsing saved models:", error);
       }
     }
     // Only run this effect when the component mounts or when availableModels change
@@ -89,7 +95,7 @@ export default function ModelSelector() {
   // Save user preferences to localStorage when selectedModels changes
   useEffect(() => {
     if (selectedModels.length > 0) {
-      localStorage.setItem('selectedModels', JSON.stringify(selectedModels));
+      localStorage.setItem("selectedModels", JSON.stringify(selectedModels));
     }
   }, [selectedModels]);
 
@@ -110,21 +116,24 @@ export default function ModelSelector() {
   }, []);
 
   const toggleModel = (modelId: string) => {
-    const model = MODELS.find(m => m.id === modelId);
-    
+    const model = MODELS.find((m) => m.id === modelId);
+
     if (!model) return;
-    
+
     // Check if model requires API key and if it's valid
-    if (model.requiresApiKey && !hasValidApiKeyFor(model.provider.toLowerCase())) {
+    if (
+      model.requiresApiKey &&
+      !hasValidApiKeyFor(model.provider.toLowerCase())
+    ) {
       // Don't allow selection if API key is invalid
       return;
     }
-    
+
     // Check if model is compatible with current attachments
     if (!getCompatibleModels().includes(modelId)) {
       return;
     }
-    
+
     const newModels = selectedModels.includes(modelId)
       ? selectedModels.filter((id) => id !== modelId)
       : [...selectedModels, modelId];
@@ -140,10 +149,10 @@ export default function ModelSelector() {
   const canSelectModel = (model: AIModel): boolean => {
     // First check if model is compatible with current attachments
     if (!getCompatibleModels().includes(model.id)) return false;
-    
+
     // Then check if model requires API key - allow selection if it doesn't require an API key
     if (!model.requiresApiKey) return true;
-    
+
     // Return whether we have a valid key
     return hasValidApiKeyFor(model.provider.toLowerCase());
   };
@@ -160,7 +169,7 @@ export default function ModelSelector() {
             className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm hover:bg-gray-50"
             disabled={isLoadingApiKeys}
           >
-            <span>{isLoadingApiKeys ? 'Loading...' : 'Select Models'}</span>
+            <span>{isLoadingApiKeys ? "Loading..." : "Select Models"}</span>
             <ChevronDown className="h-4 w-4" />
           </button>
 
@@ -175,16 +184,15 @@ export default function ModelSelector() {
                     </div>
                     <div className="mt-1">
                       {modelsByProvider[provider].map((model) => (
-                        <div
-                          key={model.id}
-                          className="relative"
-                        >
+                        <div key={model.id} className="relative">
                           <button
                             onClick={() => toggleModel(model.id)}
                             className={`flex items-center w-full px-2 py-1.5 text-sm text-left rounded
-                              ${!canSelectModel(model) 
-                                ? 'opacity-50 cursor-not-allowed text-gray-400' 
-                                : 'hover:bg-gray-100'}`}
+                              ${
+                                !canSelectModel(model)
+                                  ? "opacity-50 cursor-not-allowed text-gray-400"
+                                  : "hover:bg-gray-100"
+                              }`}
                             disabled={!canSelectModel(model)}
                           >
                             <div

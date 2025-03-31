@@ -7,6 +7,7 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Create a solid foundation with essential infrastructure.
 
 1. **Project Initialization**
+
    - [x] Set up Next.js project with TypeScript
    - [x] Configure Tailwind CSS and ShadCN
    - [x] Set up environment variables structure (including application-level API keys)
@@ -16,6 +17,7 @@ This development plan is organized by complete features (both frontend and backe
    - [x] Set up basic CI pipeline for automated testing
 
 2. **Basic Design System**
+
    - [x] Define color palette, typography, and spacing scales
    - [x] Set up Tailwind configuration with design tokens
    - [x] Create base component styles and variants
@@ -30,6 +32,7 @@ This development plan is organized by complete features (both frontend and backe
    - [x] Create error pages (404, 500, maintenance)
 
 **Phase Checkpoint:**
+
 - [x] Next.js application runs successfully locally
 - [x] Basic three-column layout displays correctly
 - [x] Tailwind CSS styling works properly
@@ -45,12 +48,14 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Complete user registration, login, and session management.
 
 1. **Backend Components**
+
    - [x] Set up Supabase client
    - [x] Create Users table in database
    - [x] Implement authentication API endpoints
    - [x] Add authentication middleware
 
 2. **Frontend Components**
+
    - [x] Create AuthContext provider
    - [x] Build login page with form validation
    - [x] Build registration page with form validation
@@ -67,6 +72,7 @@ This development plan is organized by complete features (both frontend and backe
    - [x] Test email verification process
 
 **Phase Checkpoint:**
+
 - [x] User can register a new account with email validation
 - [x] User can log in with registered credentials
 - [x] User can log out from the application
@@ -81,6 +87,7 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Enable users to submit prompts to AI models and view responses using application API keys.
 
 1. **Backend Components**
+
    - [x] Create Prompts and Responses tables
    - [x] Implement base AI service client interface
    - [x] Create first AI adapter (OpenAI) using environment variables for API keys
@@ -88,6 +95,7 @@ This development plan is organized by complete features (both frontend and backe
    - [x] Implement response storage
 
 2. **Frontend Components**
+
    - [x] Build prompt input component with submission
    - [x] Create model selection interface
    - [x] Implement basic response display component
@@ -100,6 +108,7 @@ This development plan is organized by complete features (both frontend and backe
    - [x] Validate data persistence
 
 **Phase Checkpoint:**
+
 - [x] User can input prompt text in the main interface
 - [x] User can select at least one AI model (OpenAI)
 - [x] User can submit prompt and receive a response
@@ -113,11 +122,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Extend prompt submission to multiple AI services simultaneously.
 
 1. **Backend Components**
+
    - [ ] Implement additional AI adapters (Anthropic, Google, etc.) using app-level keys
    - [ ] Create concurrent request handler
    - [x] Add model compatibility checking
 
 2. **Frontend Components**
+
    - [x] Enhance model selection to allow multiple choices
    - [ ] Build tabbed response interface
    - [ ] Implement model-specific formatting
@@ -130,6 +141,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm concurrent request functionality
 
 **Phase Checkpoint:**
+
 - [ ] User can select multiple AI models simultaneously
 - [ ] User can submit one prompt to multiple models
 - [ ] Responses from different models appear in tabbed interface
@@ -143,11 +155,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Allow users to browse, search, and restore previous prompts and responses.
 
 1. **Backend Components**
+
    - [x] Implement history query endpoints
    - [ ] Add filtering and search capabilities
    - [x] Create history item restoration endpoint
 
 2. **Frontend Components**
+
    - [x] Build history sidebar with chronological display
    - [ ] Implement history search and filtering UI
    - [x] Create history item component with restore action
@@ -160,6 +174,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm persistence across sessions
 
 **Phase Checkpoint:**
+
 - [ ] User can view history of previous prompts and responses
 - [ ] History items are grouped by date/time periods
 - [ ] User can search history items by content
@@ -174,11 +189,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Enable users to create, manage, and use prompt templates.
 
 1. **Backend Components**
+
    - [x] Create Templates table in database
    - [x] Implement template CRUD endpoints
    - [x] Add template categorization support
 
 2. **Frontend Components**
+
    - [x] Build template creation/editing modal
    - [x] Create templates list in sidebar
    - [ ] Implement template application to prompt
@@ -191,6 +208,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm template persistence
 
 **Phase Checkpoint:**
+
 - [ ] User can create a new template with name and content
 - [ ] User can edit existing templates
 - [ ] User can delete templates
@@ -205,11 +223,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Add support for dynamic variables within templates.
 
 1. **Backend Components**
+
    - [x] Create Variables table in database
    - [x] Implement variable CRUD endpoints
    - [ ] Add variable validation utilities
 
 2. **Frontend Components**
+
    - [x] Build variable management modal
    - [ ] Create variable input interface for templates
    - [ ] Implement variable replacement in prompt input
@@ -222,6 +242,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm variable persistence with templates
 
 **Phase Checkpoint:**
+
 - [ ] User can add variables to templates
 - [ ] User can specify variable types (text, number, options)
 - [ ] User can set default values for variables
@@ -236,12 +257,14 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Allow users to manage their own AI service API keys.
 
 1. **Backend Components**
+
    - [x] Create API Keys table in database
    - [x] Implement API key CRUD endpoints
    - [x] Add API key validation utilities
    - [ ] Modify AI service adapters to use user keys when available, falling back to app keys
 
 2. **Frontend Components**
+
    - [x] Create API keys management page
    - [x] Build API key input form with validation
    - [ ] Implement API key testing functionality
@@ -255,6 +278,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm secure storage implementation
 
 **Phase Checkpoint:**
+
 - [ ] User can add their own API keys for different services
 - [ ] User can view, edit, and delete saved API keys
 - [ ] User can test API key validity before saving
@@ -269,11 +293,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Add support for multimodal prompts with file attachments.
 
 1. **Backend Components**
+
    - [ ] Implement file upload endpoint
    - [ ] Create attachment processing utilities
    - [ ] Add model compatibility checking for attachments
 
 2. **Frontend Components**
+
    - [ ] Build file upload interface
    - [ ] Create attachment preview component
    - [ ] Implement attachment removal functionality
@@ -286,6 +312,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm attachment persistence
 
 **Phase Checkpoint:**
+
 - [ ] User can attach files to prompts (images, PDFs, etc.)
 - [ ] User can preview attached files
 - [ ] User can remove attachments
@@ -300,11 +327,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Add advanced response handling capabilities.
 
 1. **Backend Components**
+
    - [ ] Implement response streaming for supported models
    - [ ] Add response formatting utilities
    - [ ] Create response sharing endpoints
 
 2. **Frontend Components**
+
    - [ ] Build streaming response display
    - [ ] Implement copy-to-clipboard functionality
    - [ ] Create response comparison view
@@ -317,6 +346,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm sharing functionality
 
 **Phase Checkpoint:**
+
 - [ ] User can see responses streaming in real-time for supported models
 - [ ] User can copy response text to clipboard
 - [ ] User can compare responses from different models side-by-side
@@ -331,10 +361,12 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Create an essential landing page and meet legal requirements.
 
 **Pages to Create:**
+
 - [ ] Main Landing Page (all-in-one marketing page)
 - [ ] Terms & Privacy Page
 
 **Phase Checkpoint:**
+
 - [ ] Landing page displays correctly
 - [ ] Terms & Privacy page is accessible
 - [ ] Cookie consent mechanism works properly
@@ -345,18 +377,21 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Refine and polish the visual design and user experience throughout the application.
 
 1. **Visual Consistency**
+
    - [ ] Audit all UI components for design consistency
    - [ ] Standardize spacing, typography, and color usage
    - [ ] Refine component hierarchy and visual relationships
    - [ ] Ensure consistent styling across different screen sizes
 
 2. **User Experience Improvements**
+
    - [ ] Add meaningful transitions and animations
    - [ ] Improve component interactions and feedback
    - [ ] Refine focus states and accessibility features
    - [ ] Optimize information hierarchy across all views
 
 3. **Visual Polish**
+
    - [ ] Enhance visual styling of UI components
    - [ ] Add subtle visual enhancements (shadows, gradients, etc.)
    - [ ] Implement micro-interactions for key actions
@@ -369,6 +404,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Verify accessibility with design refinements
 
 **Phase Checkpoint:**
+
 - [ ] Visual design is consistent across all components
 - [ ] Component styling follows design system principles
 - [ ] Animations and transitions enhance the user experience
@@ -383,6 +419,7 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Implement a freemium model with premium features for paid subscribers.
 
 1. **Backend Components**
+
    - [ ] Set up payment processing (Stripe integration)
    - [ ] Create Subscriptions table in database
    - [ ] Implement subscription management endpoints
@@ -390,6 +427,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Create usage tracking mechanisms for free tier limits
 
 2. **Frontend Components**
+
    - [ ] Build subscription/upgrade page
    - [ ] Create pricing comparison UI
    - [ ] Implement payment form with validation
@@ -403,6 +441,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm usage limits for free tier
 
 **Phase Checkpoint:**
+
 - [ ] User can view pricing plans
 - [ ] User can subscribe to paid plans via Stripe
 - [ ] User can manage subscription (upgrade, downgrade, cancel)
@@ -422,11 +461,13 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Enhance overall user experience and application performance.
 
 1. **Performance Optimization**
+
    - [ ] Implement code splitting and lazy loading
    - [ ] Add caching strategies for API responses
    - [ ] Optimize database queries
 
 2. **UI Enhancement**
+
    - [ ] Refine responsive design across all components
    - [ ] Improve accessibility compliance
    - [ ] Add keyboard shortcuts for common actions
@@ -438,6 +479,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Confirm accessibility compliance
 
 **Phase Checkpoint:**
+
 - [ ] Application loads quickly (measured page load times)
 - [ ] UI is responsive across all screen sizes
 - [ ] Keyboard shortcuts work for key actions
@@ -452,24 +494,28 @@ This development plan is organized by complete features (both frontend and backe
 **Goal:** Develop additional features that could be limited to paid subscribers.
 
 1. **Advanced Template Features**
+
    - [ ] Template sharing/marketplace
    - [ ] Advanced template versioning
    - [ ] Template analytics and insights
    - [ ] Collaborative template editing
 
 2. **Enhanced AI Capabilities**
+
    - [ ] Priority processing for requests
    - [ ] Access to exclusive/premium AI models
    - [ ] Higher rate limits for requests
    - [ ] Batch processing of multiple prompts
 
 3. **Advanced History & Analytics**
+
    - [ ] Extended history retention
    - [ ] Advanced analytics dashboard
    - [ ] Export capabilities for history and responses
    - [ ] Prompt performance metrics
 
 4. **Team Collaboration Features**
+
    - [ ] Shared workspaces
    - [ ] Team member management
    - [ ] Role-based permissions
@@ -482,6 +528,7 @@ This development plan is organized by complete features (both frontend and backe
    - [ ] Automated workflows
 
 **Phase Checkpoint:**
+
 - [ ] Pro-only template features function correctly
 - [ ] Premium AI models are accessible only to paid users
 - [ ] Analytics dashboard provides useful insights
@@ -494,16 +541,19 @@ This development plan is organized by complete features (both frontend and backe
 ## Flexible Development Guidelines
 
 1. **Iteration Process:**
+
    - [x] Complete one feature before moving to the next
    - [ ] Conduct regular demos to gather feedback
    - [ ] Be prepared to revisit and enhance previous features
 
 2. **Testing Approach:**
+
    - [ ] Write unit tests for critical functionality
    - [ ] Implement integration tests for feature workflows
    - [ ] Conduct user testing sessions after completing each phase
 
 3. **Documentation:**
+
    - [ ] Document API endpoints as they are created
    - [ ] Maintain a component library with usage examples
    - [ ] Create user documentation for completed features
@@ -511,4 +561,4 @@ This development plan is organized by complete features (both frontend and backe
 4. **Collaboration Strategy:**
    - [ ] Hold weekly planning sessions to adjust priorities
    - [ ] Conduct brief daily check-ins to address blockers
-   - [ ] Review completed features before moving to next phase 
+   - [ ] Review completed features before moving to next phase

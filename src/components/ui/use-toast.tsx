@@ -1,7 +1,7 @@
 // Adapted from shadcn/ui toast component
 // https://ui.shadcn.com/docs/components/toast
 
-import * as React from "react"
+import * as React from "react";
 
 import {
   Toast,
@@ -10,11 +10,11 @@ import {
   ToastProvider,
   ToastTitle,
   ToastViewport,
-} from "@/components/ui/toast"
-import { useToast } from "@/components/ui/toast-provider"
+} from "@/components/ui/toast";
+import { useToast } from "@/components/ui/toast-provider";
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts } = useToast();
 
   return (
     <ToastProvider>
@@ -30,11 +30,19 @@ export function Toaster() {
             {action}
             <ToastClose />
           </Toast>
-        )
+        );
       })}
       <ToastViewport />
     </ToastProvider>
-  )
+  );
 }
 
-export { useToast, Toast, ToastTitle, ToastDescription, ToastClose, ToastProvider, ToastViewport } 
+export {
+  useToast,
+  Toast,
+  ToastTitle,
+  ToastDescription,
+  ToastClose,
+  ToastProvider,
+  ToastViewport,
+};

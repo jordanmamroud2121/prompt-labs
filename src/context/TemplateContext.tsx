@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useCallback,
 } from "react";
 import { useAuth } from "./AuthContext";
 import { Template, Variable } from "@/lib/supabase/models";
@@ -103,113 +104,137 @@ export function TemplateProvider({ children }: { children: React.ReactNode }) {
     setVariableModalOpen(false);
   };
 
-  const saveTemplate = async (
-    templateData: Partial<Template>,
-  ): Promise<Template> => {
-    if (!user) throw new Error("User not authenticated");
+  const saveTemplate = useCallback(
+    async (templateData: Partial<Template>): Promise<Template> => {
+      if (!user) throw new Error("User not authenticated");
 
-    try {
-      let savedTemplate: Template;
+      try {
+        let savedTemplate: Template;
 
-      if (currentTemplate?.id) {
-        // Update existing template
-        savedTemplate = await updateTemplate(currentTemplate.id, templateData);
-        setTemplates(
-          templates.map((t) => (t.id === savedTemplate.id ? savedTemplate : t)),
-        );
-      } else {
-        // Create new template
-        savedTemplate = await createTemplate({
-          ...templateData,
-          user_id: user.id,
-          is_public: false,
-        } as Template);
-        setTemplates([...templates, savedTemplate]);
+        if (currentTemplate?.id) {
+          // Update existing template
+          savedTemplate = await updateTemplate(
+            currentTemplate.id,
+            templateData,
+          );
+          setTemplates(
+            templates.map((t) =>
+              t.id === savedTemplate.id ? savedTemplate : t,
+            ),
+          );
+        } else {
+          // Create new template
+          savedTemplate = await createTemplate({
+            ...templateData,
+            user_id: user.id,
+            is_public: false,
+          } as Template);
+          setTemplates([...templates, savedTemplate]);
+        }
+
+        return savedTemplate;
+      } catch (error) {
+        console.error("Failed to save template:", error);
+        throw error;
       }
+    },
+    [user, currentTemplate, templates, setTemplates],
+  );
 
-      return savedTemplate;
-    } catch (error) {
-      console.error("Failed to save template:", error);
-      throw error;
-    }
-  };
+  const removeTemplate = useCallback(
+    async (id: string): Promise<void> => {
+      if (!user) throw new Error("User not authenticated");
 
-  const removeTemplate = async (id: string): Promise<void> => {
-    if (!user) throw new Error("User not authenticated");
-
-    try {
-      await deleteTemplate(id);
-      setTemplates(templates.filter((t) => t.id !== id));
-    } catch (error) {
-      console.error("Failed to delete template:", error);
-      throw error;
-    }
-  };
-
-  const saveVariable = async (
-    variableData: Partial<Variable>,
-  ): Promise<Variable> => {
-    if (!user) throw new Error("User not authenticated");
-
-    try {
-      let savedVariable: Variable;
-
-      if (variableData.id) {
-        // Update existing variable
-        savedVariable = await updateVariable(variableData.id, variableData);
-        setVariables(
-          variables.map((v) => (v.id === savedVariable.id ? savedVariable : v)),
-        );
-      } else {
-        // Create new variable
-        savedVariable = await createVariable({
-          ...variableData,
-          user_id: user.id,
-        } as Variable);
-        setVariables([...variables, savedVariable]);
+      try {
+        await deleteTemplate(id);
+        setTemplates(templates.filter((t) => t.id !== id));
+      } catch (error) {
+        console.error("Failed to delete template:", error);
+        throw error;
       }
+    },
+    [user, templates, setTemplates],
+  );
 
-      return savedVariable;
-    } catch (error) {
-      console.error("Failed to save variable:", error);
-      throw error;
-    }
-  };
+  const saveVariable = useCallback(
+    async (variableData: Partial<Variable>): Promise<Variable> => {
+      if (!user) throw new Error("User not authenticated");
 
-  const removeVariable = async (id: string): Promise<void> => {
-    if (!user) throw new Error("User not authenticated");
+      try {
+        let savedVariable: Variable;
 
-    try {
-      await deleteVariable(id);
-      setVariables(variables.filter((v) => v.id !== id));
-    } catch (error) {
-      console.error("Failed to delete variable:", error);
-      throw error;
-    }
-  };
+        if (variableData.id) {
+          // Update existing variable
+          savedVariable = await updateVariable(variableData.id, variableData);
+          setVariables(
+            variables.map((v) =>
+              v.id === savedVariable.id ? savedVariable : v,
+            ),
+          );
+        } else {
+          // Create new variable
+          savedVariable = await createVariable({
+            ...variableData,
+            user_id: user.id,
+          } as Variable);
+          setVariables([...variables, savedVariable]);
+        }
 
-  const findTemplate = (templateId: string): Template | undefined => {
-    return templates.find((t) => t.id === templateId);
-  };
+        return savedVariable;
+      } catch (error) {
+        console.error("Failed to save variable:", error);
+        throw error;
+      }
+    },
+    [user, variables, setVariables],
+  );
 
-  // Apply a template to generate a prompt text
-  const applyTemplate = async (templateId: string): Promise<string> => {
-    const template = findTemplate(templateId);
-    if (!template) throw new Error("Template not found");
+  const removeVariable = useCallback(
+    async (id: string): Promise<void> => {
+      if (!user) throw new Error("User not authenticated");
 
-    return replaceVariables(template.template_text);
-  };
+      try {
+        await deleteVariable(id);
+        setVariables(variables.filter((v) => v.id !== id));
+      } catch (error) {
+        console.error("Failed to delete variable:", error);
+        throw error;
+      }
+    },
+    [user, variables, setVariables],
+  );
 
   // Replace variables in a text
-  const replaceVariables = (text: string): string => {
-    const variableMap = new Map(variables.map((v) => [v.name, v.value]));
+  const replaceVariables = useCallback(
+    (text: string): string => {
+      const variableMap = new Map(variables.map((v) => [v.name, v.value]));
 
-    // Match pattern: {variableName}
-    return text.replace(/{([^{}]+)}/g, (match, variableName) => {
-      const value = variableMap.get(variableName);
-      return value !== undefined ? value : match;
-    });
-  };
+      // Match pattern: {variableName}
+      return text.replace(/{([^{}]+)}/g, (match, variableName) => {
+        const value = variableMap.get(variableName);
+        return value !== undefined ? value : match;
+      });
+    },
+    [variables],
+  );
+
+  const findTemplate = useCallback(
+    (templateId: string): Template | undefined => {
+      return templates.find((t) => t.id === templateId);
+    },
+    [templates],
+  );
+
+  // Apply a template to generate a prompt text
+  const applyTemplate = useCallback(
+    async (templateId: string): Promise<string> => {
+      const template = findTemplate(templateId);
+      if (!template) throw new Error("Template not found");
+
+      return replaceVariables(template.template_text);
+    },
+    [findTemplate, replaceVariables],
+  );
 
   const value = useMemo(
     () => ({

@@ -22,12 +22,12 @@ export default function LoginPage() {
 
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         setError(error);
         return;
       }
-      
+
       router.push(redirectTo);
     } catch (err) {
       setError("An unexpected error occurred");
@@ -127,4 +127,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}

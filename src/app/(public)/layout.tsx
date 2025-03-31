@@ -7,9 +7,5 @@ export default function PublicLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <AuthProvider>
-      {children}
-    </AuthProvider>
-  );
-} 
+  return <AuthProvider>{children}</AuthProvider>;
+}

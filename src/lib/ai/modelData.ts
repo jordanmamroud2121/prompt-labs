@@ -19,10 +19,10 @@ export const AI_PROVIDERS = [
   "Anthropic",
   "Google",
   "Perplexity",
-  "DeepSeek"
+  "DeepSeek",
 ] as const;
 
-export type AIProvider = typeof AI_PROVIDERS[number];
+export type AIProvider = (typeof AI_PROVIDERS)[number];
 
 export const MODELS: AIModel[] = [
   // OpenAI Models
@@ -30,46 +30,49 @@ export const MODELS: AIModel[] = [
     id: "gpt-4o",
     name: "GPT-4o",
     provider: "OpenAI",
-    description: "Most capable multimodal model with strong reasoning abilities",
+    description:
+      "Most capable multimodal model with strong reasoning abilities",
     capabilities: {
       text: true,
       images: true,
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gpt-4o-mini",
     name: "GPT-4o Mini",
     provider: "OpenAI",
-    description: "Fast, inexpensive, capable model ideal for replacing GPT-3.5 Turbo",
+    description:
+      "Fast, inexpensive, capable model ideal for replacing GPT-3.5 Turbo",
     capabilities: {
       text: true,
       images: true,
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gpt-4-turbo",
     name: "GPT-4 Turbo",
     provider: "OpenAI",
-    description: "Advanced model for complex tasks with lower latency than GPT-4",
+    description:
+      "Advanced model for complex tasks with lower latency than GPT-4",
     capabilities: {
       text: true,
       images: true,
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gpt-4",
@@ -82,9 +85,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gpt-3.5-turbo",
@@ -97,9 +100,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
 
   // Anthropic Models
@@ -114,9 +117,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "claude-3-5-sonnet-20241022",
@@ -129,9 +132,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "claude-3-5-haiku-20241022",
@@ -144,9 +147,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "claude-3-opus-20240229",
@@ -159,9 +162,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "claude-3-sonnet-20240229",
@@ -174,9 +177,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "claude-3-haiku-20240307",
@@ -189,9 +192,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
 
   // Google Gemini Models
@@ -206,9 +209,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gemini-2.0-flash",
@@ -221,9 +224,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gemini-2.0-flash-lite",
@@ -236,9 +239,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gemini-1.5-pro",
@@ -251,9 +254,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gemini-1.5-flash",
@@ -266,9 +269,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "gemini-1.5-flash-8b",
@@ -281,9 +284,9 @@ export const MODELS: AIModel[] = [
       audio: true,
       video: true,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
 
   // Perplexity Models
@@ -298,9 +301,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "sonar",
@@ -313,9 +316,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "sonar-deep-research",
@@ -328,9 +331,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "sonar-reasoning-pro",
@@ -343,9 +346,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "sonar-reasoning",
@@ -358,24 +361,25 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "r1-1776",
     name: "R1-1776",
     provider: "Perplexity",
-    description: "Offline chat model focused on uncensored, factual information",
+    description:
+      "Offline chat model focused on uncensored, factual information",
     capabilities: {
       text: true,
       images: false,
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
 
   // DeepSeek Models
@@ -390,9 +394,9 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
+    requiresApiKey: true,
   },
   {
     id: "deepseek-reasoner",
@@ -405,8 +409,8 @@ export const MODELS: AIModel[] = [
       audio: false,
       video: false,
       code: true,
-      streaming: true
+      streaming: true,
     },
-    requiresApiKey: true
-  }
+    requiresApiKey: true,
+  },
 ];

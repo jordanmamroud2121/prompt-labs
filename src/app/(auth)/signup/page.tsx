@@ -23,13 +23,15 @@ export default function SignupPage() {
 
     try {
       const { error } = await signUp(email, password, name);
-      
+
       if (error) {
         setError(error);
         return;
       }
-      
-      setSuccessMessage("Registration successful! Please check your email to verify your account.");
+
+      setSuccessMessage(
+        "Registration successful! Please check your email to verify your account.",
+      );
       // Optionally redirect after a delay
       setTimeout(() => {
         router.push("/login");
@@ -162,4 +164,4 @@ export default function SignupPage() {
       </div>
     </div>
   );
-} 
+}

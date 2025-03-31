@@ -7,27 +7,27 @@ import ModelSelector from "@/components/ai/ModelSelector";
 import { AlertCircle } from "lucide-react";
 
 export default function MainContent() {
-  const { 
-    selectedModels, 
-    responses, 
-    isLoading, 
-    errorMessage, 
+  const {
+    selectedModels,
+    responses,
+    isLoading,
+    errorMessage,
     clearError,
     responseTimes,
-    progressStatus
+    progressStatus,
   } = usePrompt();
 
   return (
     <div className="flex h-full flex-col">
       <div className="flex-none p-4">
         <h1 className="mb-6 text-2xl font-semibold text-gray-800">PromptLab</h1>
-        
+
         {/* Error message display */}
         {errorMessage && (
           <div className="mb-4 flex items-center rounded-md bg-red-50 p-3 text-sm text-red-800">
             <AlertCircle className="mr-2 h-5 w-5 flex-shrink-0" />
             <span>{errorMessage}</span>
-            <button 
+            <button
               onClick={clearError}
               className="ml-auto text-red-700 hover:text-red-900"
               aria-label="Dismiss error"
@@ -48,9 +48,9 @@ export default function MainContent() {
 
       {/* Response area */}
       <div className="flex-1 overflow-hidden border-t border-gray-200">
-        <ResponseTabs 
-          responses={responses} 
-          selectedModels={selectedModels} 
+        <ResponseTabs
+          responses={responses}
+          selectedModels={selectedModels}
           isLoading={isLoading}
           responseTimes={responseTimes}
           progressStatus={progressStatus}

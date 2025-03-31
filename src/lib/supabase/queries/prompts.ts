@@ -46,7 +46,7 @@ export async function getPromptById(promptId: string): Promise<Prompt | null> {
  */
 export async function getPromptsByTemplateId(
   userId: string,
-  templateId: string
+  templateId: string,
 ): Promise<Prompt[]> {
   const { data, error } = await supabase
     .from(TABLES.PROMPTS)
@@ -66,7 +66,9 @@ export async function getPromptsByTemplateId(
 /**
  * Create a new prompt
  */
-export async function createPrompt(prompt: Omit<Prompt, "id" | "created_at">): Promise<Prompt> {
+export async function createPrompt(
+  prompt: Omit<Prompt, "id" | "created_at">,
+): Promise<Prompt> {
   const { data, error } = await supabase
     .from(TABLES.PROMPTS)
     .insert({
@@ -89,7 +91,7 @@ export async function createPrompt(prompt: Omit<Prompt, "id" | "created_at">): P
  */
 export async function updatePrompt(
   promptId: string,
-  updates: Partial<Omit<Prompt, "id" | "user_id" | "created_at">>
+  updates: Partial<Omit<Prompt, "id" | "user_id" | "created_at">>,
 ): Promise<Prompt> {
   const { data, error } = await supabase
     .from(TABLES.PROMPTS)
@@ -127,7 +129,10 @@ export async function deletePrompt(promptId: string): Promise<void> {
 /**
  * Toggle favorite status for a prompt
  */
-export async function togglePromptFavorite(promptId: string, isFavorite: boolean): Promise<Prompt> {
+export async function togglePromptFavorite(
+  promptId: string,
+  isFavorite: boolean,
+): Promise<Prompt> {
   return updatePrompt(promptId, { is_favorite: isFavorite });
 }
 
@@ -136,7 +141,7 @@ export async function togglePromptFavorite(promptId: string, isFavorite: boolean
  */
 export async function searchPrompts(
   userId: string,
-  searchTerm: string
+  searchTerm: string,
 ): Promise<Prompt[]> {
   const { data, error } = await supabase
     .from(TABLES.PROMPTS)
@@ -151,4 +156,4 @@ export async function searchPrompts(
   }
 
   return data as Prompt[];
-} 
+}

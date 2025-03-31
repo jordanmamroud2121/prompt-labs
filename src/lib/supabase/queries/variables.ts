@@ -22,7 +22,9 @@ export async function getUserVariables(userId: string): Promise<Variable[]> {
 /**
  * Get a variable by ID
  */
-export async function getVariableById(variableId: string): Promise<Variable | null> {
+export async function getVariableById(
+  variableId: string,
+): Promise<Variable | null> {
   const { data, error } = await supabase
     .from(TABLES.VARIABLES)
     .select("*")
@@ -46,7 +48,7 @@ export async function getVariableById(variableId: string): Promise<Variable | nu
  */
 export async function getVariableByName(
   userId: string,
-  name: string
+  name: string,
 ): Promise<Variable | null> {
   const { data, error } = await supabase
     .from(TABLES.VARIABLES)
@@ -71,7 +73,7 @@ export async function getVariableByName(
  * Create a new variable
  */
 export async function createVariable(
-  variable: Omit<Variable, "id" | "created_at">
+  variable: Omit<Variable, "id" | "created_at">,
 ): Promise<Variable> {
   const { data, error } = await supabase
     .from(TABLES.VARIABLES)
@@ -95,7 +97,7 @@ export async function createVariable(
  */
 export async function updateVariable(
   variableId: string,
-  updates: Partial<Omit<Variable, "id" | "user_id" | "created_at">>
+  updates: Partial<Omit<Variable, "id" | "user_id" | "created_at">>,
 ): Promise<Variable> {
   const { data, error } = await supabase
     .from(TABLES.VARIABLES)
@@ -137,7 +139,7 @@ export async function upsertVariable(
   userId: string,
   name: string,
   value: string,
-  description?: string
+  description?: string,
 ): Promise<Variable> {
   const { data, error } = await supabase
     .from(TABLES.VARIABLES)
@@ -149,7 +151,7 @@ export async function upsertVariable(
         description,
         updated_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,name" }
+      { onConflict: "user_id,name" },
     )
     .select()
     .single();
@@ -160,4 +162,4 @@ export async function upsertVariable(
   }
 
   return data as Variable;
-} 
+}

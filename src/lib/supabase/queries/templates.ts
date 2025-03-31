@@ -1,5 +1,7 @@
 import { supabase } from "../client";
 import { Template, TABLES } from "../models";
+import { DatabaseError } from "@/lib/api/customErrors";
+import { NotFoundError } from "@/lib/api/customErrors";
 
 /**
  * Get all templates for a user, including public templates
@@ -56,87 +58,178 @@ export async function getPublicTemplates(): Promise<Template[]> {
 }
 
 /**
- * Get a template by ID
+ * Get template by ID with proper type safety
  */
-export async function getTemplateById(templateId: string): Promise<Template | null> {
+export async function getTemplateById(
+  templateId: string,
+): Promise<Template | null> {
   const { data, error } = await supabase
     .from(TABLES.TEMPLATES)
-    .select("*")
+    .select()
     .eq("id", templateId)
     .single();
 
   if (error) {
-    if (error.code === "PGRST116") {
-      // No rows returned
-      return null;
-    }
     console.error("Error fetching template:", error);
     throw new Error(`Failed to fetch template: ${error.message}`);
   }
 
-  return data as Template;
-}
-
-/**
- * Create a new template
- */
-export async function createTemplate(
-  template: Omit<Template, "id" | "created_at">
-): Promise<Template> {
-  const { data, error } = await supabase
-    .from(TABLES.TEMPLATES)
-    .insert({
-      ...template,
-      updated_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Error creating template:", error);
-    throw new Error(`Failed to create template: ${error.message}`);
+  // Validate template data structure before returning
+  if (!data) {
+    return null;
   }
 
-  return data as Template;
+  // Use type guard to ensure data has the required Template properties
+  if (!isValidTemplate(data)) {
+    console.error("Retrieved template has invalid structure", data);
+    throw new Error(
+      "Retrieved template data does not match expected structure",
+    );
+  }
+
+  return data;
 }
 
 /**
- * Update a template
+ * Type guard to validate Template structure
+ */
+function isValidTemplate(data: unknown): data is Template {
+  return (
+    !!data &&
+    typeof data === "object" &&
+    "id" in data &&
+    "user_id" in data &&
+    "name" in data &&
+    "template_text" in data
+  );
+}
+
+/**
+ * Create a new template with proper error handling
+ *
+ * @param template - The template data to create
+ * @returns The created template
+ * @throws DatabaseError if the template creation fails
+ */
+export async function createTemplate(
+  template: Omit<Template, "id" | "created_at">,
+): Promise<Template> {
+  try {
+    // Insert template
+    const { data, error } = await supabase
+      .from(TABLES.TEMPLATES)
+      .insert({
+        ...template,
+        updated_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating template:", error);
+      throw new DatabaseError(`Failed to create template: ${error.message}`, {
+        errorDetails: error,
+      });
+    }
+
+    if (!data) {
+      throw new DatabaseError("No data returned from template creation");
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in createTemplate:", error);
+
+    // Re-throw if it's already a DatabaseError, otherwise wrap it
+    if (error instanceof DatabaseError) {
+      throw error;
+    }
+    throw new DatabaseError("Failed in template creation", {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+/**
+ * Update a template with proper error handling
+ *
+ * @param templateId - The ID of the template to update
+ * @param updates - The fields to update
+ * @returns The updated template
+ * @throws DatabaseError if the template update fails
+ * @throws NotFoundError if the template doesn't exist
  */
 export async function updateTemplate(
   templateId: string,
-  updates: Partial<Omit<Template, "id" | "user_id" | "created_at">>
+  updates: Partial<Omit<Template, "id" | "user_id" | "created_at">>,
 ): Promise<Template> {
-  const { data, error } = await supabase
-    .from(TABLES.TEMPLATES)
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", templateId)
-    .select()
-    .single();
+  try {
+    // Update template
+    const { data, error } = await supabase
+      .from(TABLES.TEMPLATES)
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", templateId)
+      .select()
+      .single();
 
-  if (error) {
-    console.error("Error updating template:", error);
-    throw new Error(`Failed to update template: ${error.message}`);
+    if (error) {
+      console.error("Error updating template:", error);
+      throw new DatabaseError(`Failed to update template: ${error.message}`, {
+        errorDetails: error,
+      });
+    }
+
+    if (!data) {
+      throw new NotFoundError(`Template with ID ${templateId} not found`);
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error in updateTemplate:", error);
+
+    // Re-throw if it's already a typed error, otherwise wrap it
+    if (error instanceof DatabaseError || error instanceof NotFoundError) {
+      throw error;
+    }
+    throw new DatabaseError("Failed in template update", {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
   }
-
-  return data as Template;
 }
 
 /**
- * Delete a template
+ * Delete a template with proper error handling
+ *
+ * @param templateId - The ID of the template to delete
+ * @throws DatabaseError if the template deletion fails
  */
 export async function deleteTemplate(templateId: string): Promise<void> {
-  const { error } = await supabase
-    .from(TABLES.TEMPLATES)
-    .delete()
-    .eq("id", templateId);
+  try {
+    // Delete template
+    const { error } = await supabase
+      .from(TABLES.TEMPLATES)
+      .delete()
+      .eq("id", templateId);
 
-  if (error) {
-    console.error("Error deleting template:", error);
-    throw new Error(`Failed to delete template: ${error.message}`);
+    if (error) {
+      console.error("Error deleting template:", error);
+      throw new DatabaseError(`Failed to delete template: ${error.message}`, {
+        errorDetails: error,
+      });
+    }
+  } catch (error) {
+    console.error("Error in deleteTemplate:", error);
+
+    // Re-throw if it's already a DatabaseError, otherwise wrap it
+    if (error instanceof DatabaseError) {
+      throw error;
+    }
+    throw new DatabaseError("Failed in template deletion", {
+      originalError: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -145,7 +238,7 @@ export async function deleteTemplate(templateId: string): Promise<void> {
  */
 export async function toggleTemplatePublic(
   templateId: string,
-  isPublic: boolean
+  isPublic: boolean,
 ): Promise<Template> {
   return updateTemplate(templateId, { is_public: isPublic });
-} 
+}

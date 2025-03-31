@@ -19,16 +19,16 @@ const MODEL_NAMES: Record<string, string> = {
   "gpt-4o": "GPT-4o",
   "gpt-4-turbo": "GPT-4 Turbo",
   "gpt-3.5-turbo": "GPT-3.5 Turbo",
-  
+
   // Anthropic
   "claude-3-opus-20240229": "Claude 3 Opus",
   "claude-3-sonnet-20240229": "Claude 3 Sonnet",
   "claude-3-haiku-20240307": "Claude 3 Haiku",
-  
+
   // Gemini
   "gemini-1.5-pro": "Gemini 1.5 Pro",
   "gemini-pro": "Gemini Pro",
-  
+
   // Other
   "deepseek-coder": "DeepSeek Coder",
   "sonar-small-online": "Perplexity Sonar",
@@ -53,7 +53,10 @@ export default function ResponseTabs({
 
   // Set first selected model as active tab when models change
   useEffect(() => {
-    if (selectedModels.length > 0 && (!activeTab || !selectedModels.includes(activeTab))) {
+    if (
+      selectedModels.length > 0 &&
+      (!activeTab || !selectedModels.includes(activeTab))
+    ) {
       setActiveTab(selectedModels[0]);
       console.log("Setting active tab to:", selectedModels[0]);
     }
@@ -62,7 +65,7 @@ export default function ResponseTabs({
   const handleCopy = (text: string, model: string) => {
     navigator.clipboard.writeText(text);
     setCopied(model);
-    
+
     // Reset copied status after 2 seconds
     setTimeout(() => {
       setCopied(null);
@@ -78,7 +81,8 @@ export default function ResponseTabs({
   }
 
   // Determine if we have a valid response for the active tab
-  const hasResponse = activeTab && responses && Object.keys(responses).includes(activeTab);
+  const hasResponse =
+    activeTab && responses && Object.keys(responses).includes(activeTab);
   const responseText = hasResponse ? responses[activeTab!] : "";
   const isError = responseText?.startsWith("Error:");
   const responseTime = activeTab ? responseTimes[activeTab] || 0 : 0;
@@ -89,9 +93,10 @@ export default function ResponseTabs({
         <nav className="flex">
           {selectedModels.map((model) => {
             const hasModelResponse = responses && responses[model];
-            const isModelError = hasModelResponse && responses[model].startsWith("Error:");
+            const isModelError =
+              hasModelResponse && responses[model].startsWith("Error:");
             const progress = progressStatus[model] || 0;
-            
+
             return (
               <button
                 key={model}
@@ -103,14 +108,14 @@ export default function ResponseTabs({
                 } ${isModelError ? "text-red-500" : ""}`}
               >
                 {MODEL_NAMES[model] || model}
-                
+
                 {/* Status indicators */}
                 {isLoading && !hasModelResponse && (
                   <div className="relative ml-2">
                     {progress > 0 ? (
                       <div className="h-2 w-2 overflow-hidden rounded-full bg-gray-200">
-                        <div 
-                          className="h-full bg-indigo-500" 
+                        <div
+                          className="h-full bg-indigo-500"
                           style={{ width: `${progress}%` }}
                         ></div>
                       </div>
@@ -119,11 +124,13 @@ export default function ResponseTabs({
                     )}
                   </div>
                 )}
-                
+
                 {hasModelResponse && !isLoading && (
-                  <span className={`ml-2 h-2 w-2 rounded-full ${isModelError ? "bg-red-500" : "bg-green-500"}`}></span>
+                  <span
+                    className={`ml-2 h-2 w-2 rounded-full ${isModelError ? "bg-red-500" : "bg-green-500"}`}
+                  ></span>
                 )}
-                
+
                 {/* Tooltip with response time */}
                 {hasModelResponse && responseTimes[model] && (
                   <div className="invisible absolute -top-8 left-1/2 -translate-x-1/2 rounded-md bg-gray-800 px-2 py-1 text-xs text-white group-hover:visible">
@@ -143,8 +150,8 @@ export default function ResponseTabs({
             <span className="mt-2 text-gray-600">Generating response...</span>
             {activeTab && progressStatus[activeTab] > 0 && (
               <div className="mt-3 h-2 w-48 overflow-hidden rounded-full bg-gray-200">
-                <div 
-                  className="h-full bg-indigo-500" 
+                <div
+                  className="h-full bg-indigo-500"
                   style={{ width: `${progressStatus[activeTab]}%` }}
                 ></div>
               </div>
@@ -163,13 +170,13 @@ export default function ResponseTabs({
                 <Clipboard className="h-5 w-5" />
               )}
             </button>
-            
+
             {responseTime > 0 && (
               <div className="absolute right-12 top-2.5 text-xs text-gray-500">
                 {(responseTime / 1000).toFixed(1)}s
               </div>
             )}
-            
+
             {isError ? (
               <div className="whitespace-pre-wrap rounded-md bg-red-50 p-4 text-sm text-red-800">
                 {responseText}
@@ -186,4 +193,4 @@ export default function ResponseTabs({
       </div>
     </div>
   );
-} 
+}

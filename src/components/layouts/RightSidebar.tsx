@@ -7,7 +7,8 @@ import { Clock } from "lucide-react";
 const mockHistoryItems = [
   {
     id: "1",
-    prompt: "lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum",
+    prompt:
+      "lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum",
     timestamp: new Date(new Date().setHours(10, 30)),
     date: "Today",
   },
@@ -29,14 +30,17 @@ export default function RightSidebar() {
   const [historyItems] = useState(mockHistoryItems);
 
   // Group history items by date
-  const groupedHistory = historyItems.reduce((groups, item) => {
-    const dateKey = item.date;
-    if (!groups[dateKey]) {
-      groups[dateKey] = [];
-    }
-    groups[dateKey].push(item);
-    return groups;
-  }, {} as Record<string, typeof mockHistoryItems>);
+  const groupedHistory = historyItems.reduce(
+    (groups, item) => {
+      const dateKey = item.date;
+      if (!groups[dateKey]) {
+        groups[dateKey] = [];
+      }
+      groups[dateKey].push(item);
+      return groups;
+    },
+    {} as Record<string, typeof mockHistoryItems>,
+  );
 
   // Format timestamp to display time only (HH:MM AM/PM)
   const formatTime = (timestamp: Date) => {
@@ -84,4 +88,4 @@ export default function RightSidebar() {
       </div>
     </div>
   );
-} 
+}

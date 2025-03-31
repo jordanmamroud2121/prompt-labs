@@ -1,13 +1,19 @@
-'use client';
+"use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User, AuthState } from '../types';
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { User, AuthState } from "../types";
 
 const mockUser: User = {
-  id: 'mock-user-id',
-  email: 'dev@example.com',
-  name: 'Development User',
-  avatar_url: 'https://via.placeholder.com/150',
+  id: "mock-user-id",
+  email: "dev@example.com",
+  name: "Development User",
+  avatar_url: "https://via.placeholder.com/150",
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };
@@ -20,22 +26,22 @@ const initialState: AuthState = {
   error: null,
 };
 
-const MockAuthContext = createContext<AuthState & {
-  login: () => Promise<boolean>;
-  signup: () => Promise<boolean>;
-  logout: () => Promise<boolean>;
-}>(
-  {
-    ...initialState,
-    login: async () => false,
-    signup: async () => false,
-    logout: async () => false,
+const MockAuthContext = createContext<
+  AuthState & {
+    login: () => Promise<boolean>;
+    signup: () => Promise<boolean>;
+    logout: () => Promise<boolean>;
   }
-);
+>({
+  ...initialState,
+  login: async () => false,
+  signup: async () => false,
+  logout: async () => false,
+});
 
 export function MockAuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(initialState);
-  const isAuthBypassed = process.env.NEXT_PUBLIC_SKIP_AUTH === 'true';
+  const isAuthBypassed = process.env.NEXT_PUBLIC_SKIP_AUTH === "true";
 
   useEffect(() => {
     // If auth is bypassed, auto-login with mock user
@@ -43,8 +49,8 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
       setState({
         session: {
           user: mockUser,
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
+          access_token: "mock-access-token",
+          refresh_token: "mock-refresh-token",
           expires_at: Date.now() + 3600000, // 1 hour from now
         },
         user: mockUser,
@@ -64,8 +70,8 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
     setState({
       session: {
         user: mockUser,
-        access_token: 'mock-access-token',
-        refresh_token: 'mock-refresh-token',
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
         expires_at: Date.now() + 3600000, // 1 hour from now
       },
       user: mockUser,
@@ -80,8 +86,8 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
     setState({
       session: {
         user: mockUser,
-        access_token: 'mock-access-token',
-        refresh_token: 'mock-refresh-token',
+        access_token: "mock-access-token",
+        refresh_token: "mock-refresh-token",
         expires_at: Date.now() + 3600000, // 1 hour from now
       },
       user: mockUser,
@@ -110,4 +116,4 @@ export function MockAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useMockAuth = () => useContext(MockAuthContext); 
+export const useMockAuth = () => useContext(MockAuthContext);

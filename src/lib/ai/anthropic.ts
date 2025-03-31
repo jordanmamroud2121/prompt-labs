@@ -3,7 +3,9 @@ import { MODELS } from "./modelData";
 
 export class AnthropicClient implements AIClient {
   name = "Anthropic";
-  models = MODELS.filter(model => model.provider === "Anthropic").map(model => model.id);
+  models = MODELS.filter((model) => model.provider === "Anthropic").map(
+    (model) => model.id,
+  );
   supportsAttachments = true;
   supportsStreaming = true;
   private apiKey: string = "";
@@ -28,7 +30,7 @@ export class AnthropicClient implements AIClient {
 
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
-    
+
     try {
       const requestBody = {
         model,
@@ -36,21 +38,23 @@ export class AnthropicClient implements AIClient {
         max_tokens: request.options?.maxTokens || 4000,
         temperature: request.options?.temperature,
         top_p: request.options?.topP,
-        stream: false
+        stream: false,
       };
 
       // Make the API request via our server-side proxy
       const response = await fetch("/api/ai/anthropic", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+        throw new Error(
+          error.error?.message || `Anthropic API error: ${response.status}`,
+        );
       }
 
       const data = await response.json();
@@ -61,7 +65,7 @@ export class AnthropicClient implements AIClient {
         text: data.content[0].text,
         model: data.model,
         executionTime,
-        tokensUsed: data.usage?.input_tokens + data.usage?.output_tokens
+        tokensUsed: data.usage?.input_tokens + data.usage?.output_tokens,
       };
     } catch (error) {
       const endTime = Date.now();
@@ -70,14 +74,14 @@ export class AnthropicClient implements AIClient {
         text: "",
         model,
         executionTime,
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       };
     }
   }
 
   async generateStreamingCompletion(
     request: AIRequest,
-    onChunk: (chunk: StreamingChunk) => void
+    onChunk: (chunk: StreamingChunk) => void,
   ): Promise<void> {
     if (!this.apiKey) {
       throw new Error("Anthropic API key is required");
@@ -91,26 +95,28 @@ export class AnthropicClient implements AIClient {
         headers: {
           "Content-Type": "application/json",
           "X-API-Key": this.apiKey,
-          "anthropic-version": this.apiVersion
+          "anthropic-version": this.apiVersion,
         },
         body: JSON.stringify({
           model,
           messages: [
-            { 
-              role: "user", 
-              content: request.prompt
-            }
+            {
+              role: "user",
+              content: request.prompt,
+            },
           ],
           max_tokens: request.options?.maxTokens || 4000,
           temperature: request.options?.temperature,
           top_p: request.options?.topP,
-          stream: true
-        })
+          stream: true,
+        }),
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error?.message || `Anthropic API error: ${response.status}`);
+        throw new Error(
+          error.error?.message || `Anthropic API error: ${response.status}`,
+        );
       }
 
       if (!response.body) {
@@ -124,38 +130,36 @@ export class AnthropicClient implements AIClient {
       while (!done) {
         const { value, done: doneReading } = await reader.read();
         done = doneReading;
-        
+
         if (done) {
           onChunk({ text: "", isComplete: true });
           break;
         }
 
         const chunk = decoder.decode(value);
-        const lines = chunk
-          .split('\n')
-          .filter(line => line.trim() !== '');
+        const lines = chunk.split("\n").filter((line) => line.trim() !== "");
 
         for (const line of lines) {
-          if (line.startsWith('data: ')) {
+          if (line.startsWith("data: ")) {
             const data = line.slice(6);
-            
-            if (data === '[DONE]') {
+
+            if (data === "[DONE]") {
               onChunk({ text: "", isComplete: true });
               break;
             }
 
             try {
               const json = JSON.parse(data);
-              if (json.type === 'content_block_delta') {
-                const content = json.delta?.text || '';
+              if (json.type === "content_block_delta") {
+                const content = json.delta?.text || "";
                 if (content) {
                   onChunk({ text: content, isComplete: false });
                 }
-              } else if (json.type === 'message_stop') {
+              } else if (json.type === "message_stop") {
                 onChunk({ text: "", isComplete: true });
               }
             } catch (e) {
-              console.error('Error parsing Anthropic stream:', e);
+              console.error("Error parsing Anthropic stream:", e);
             }
           }
         }
@@ -172,7 +176,7 @@ export class AnthropicClient implements AIClient {
     if (modelId && this.models.includes(modelId)) {
       return modelId;
     }
-    
+
     // Otherwise use default model
     return this.defaultModel;
   }
@@ -184,13 +188,13 @@ export class AnthropicClient implements AIClient {
         headers: {
           "Content-Type": "application/json",
           "X-API-Key": apiKey,
-          "anthropic-version": this.apiVersion
+          "anthropic-version": this.apiVersion,
         },
         body: JSON.stringify({
           model: this.defaultModel,
           messages: [{ role: "user", content: "Hello" }],
-          max_tokens: 10
-        })
+          max_tokens: 10,
+        }),
       });
       return response.ok;
     } catch (error) {
@@ -198,4 +202,4 @@ export class AnthropicClient implements AIClient {
       return false;
     }
   }
-} 
+}
