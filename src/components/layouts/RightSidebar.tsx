@@ -58,8 +58,17 @@ export default function RightSidebar() {
       }
 
       const data = await response.json();
-      console.log("API success, items count:", data.length);
-      setHistoryItems(data);
+      console.log("API response data:", data);
+
+      // Check if data is an array before using length
+      if (Array.isArray(data)) {
+        console.log("API success, items count:", data.length);
+        setHistoryItems(data);
+      } else {
+        // Handle non-array response (likely empty object or error object)
+        console.log("API returned non-array data:", data);
+        setHistoryItems([]);
+      }
     } catch (error) {
       console.error("Error fetching history (detailed):", error);
       setError(
@@ -123,8 +132,17 @@ export default function RightSidebar() {
       }
 
       const data = await response.json();
-      console.log("Search success, items count:", data.length);
-      setHistoryItems(data);
+      console.log("Search response data:", data);
+
+      // Check if data is an array before using length
+      if (Array.isArray(data)) {
+        console.log("Search success, items count:", data.length);
+        setHistoryItems(data);
+      } else {
+        // Handle non-array response
+        console.log("Search API returned non-array data:", data);
+        setHistoryItems([]);
+      }
     } catch (error) {
       console.error("Error in search (detailed):", error);
       setError(
@@ -387,11 +405,25 @@ export default function RightSidebar() {
                   <p className="text-sm">
                     {searchTerm ? "No results found" : "No history yet"}
                   </p>
-                  <p className="text-xs">
+                  <p className="text-xs mb-4">
                     {searchTerm
                       ? "Try a different search term"
                       : "Your prompt history will appear here"}
                   </p>
+
+                  {/* Add button to create first prompt */}
+                  {!searchTerm && (
+                    <a
+                      href="#prompt-input"
+                      className="rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                      onClick={() => {
+                        // Focus the prompt input
+                        document.getElementById("prompt-input")?.focus();
+                      }}
+                    >
+                      Create Your First Prompt
+                    </a>
+                  )}
                 </div>
               )}
             </div>

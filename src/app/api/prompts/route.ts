@@ -124,7 +124,11 @@ export async function GET(request: NextRequest) {
           prompts = await getUserPrompts(userId, queryOptions);
         }
 
-        console.log(`API: Successfully retrieved ${prompts.length} prompts`);
+        if (!prompts || prompts.length === 0) {
+          console.log(`API: No prompts found for user ${userId}`);
+        } else {
+          console.log(`API: Successfully retrieved ${prompts.length} prompts`);
+        }
         return NextResponse.json(prompts);
       } catch (error) {
         // Special handling for permission errors
