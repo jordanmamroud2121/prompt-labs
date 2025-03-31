@@ -2,14 +2,48 @@ import { supabase } from "../client";
 import { Prompt, TABLES } from "../models";
 
 /**
- * Get all prompts for a user
+ * Get all prompts for a user with pagination and optional date filtering
  */
-export async function getUserPrompts(userId: string): Promise<Prompt[]> {
-  const { data, error } = await supabase
-    .from(TABLES.PROMPTS)
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
+export async function getUserPrompts(
+  userId: string,
+  options?: {
+    limit?: number;
+    offset?: number;
+    startDate?: Date;
+    endDate?: Date;
+    favorite?: boolean;
+  },
+): Promise<Prompt[]> {
+  let query = supabase.from(TABLES.PROMPTS).select("*").eq("user_id", userId);
+
+  // Apply date range filter if provided
+  if (options?.startDate) {
+    query = query.gte("created_at", options.startDate.toISOString());
+  }
+  if (options?.endDate) {
+    query = query.lte("created_at", options.endDate.toISOString());
+  }
+
+  // Apply favorite filter if provided
+  if (options?.favorite !== undefined) {
+    query = query.eq("is_favorite", options.favorite);
+  }
+
+  // Apply pagination
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query = query.range(
+      options.offset,
+      options.offset + (options.limit || 20) - 1,
+    );
+  }
+
+  // Order by creation date (newest first)
+  query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error fetching prompts:", error);
@@ -137,18 +171,62 @@ export async function togglePromptFavorite(
 }
 
 /**
- * Search prompts by text
+ * Search prompts by text with advanced filtering options
  */
 export async function searchPrompts(
   userId: string,
   searchTerm: string,
+  options?: {
+    limit?: number;
+    offset?: number;
+    startDate?: Date;
+    endDate?: Date;
+    favorite?: boolean;
+    templateId?: string;
+  },
 ): Promise<Prompt[]> {
-  const { data, error } = await supabase
-    .from(TABLES.PROMPTS)
-    .select("*")
-    .eq("user_id", userId)
-    .or(`prompt_text.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`)
-    .order("created_at", { ascending: false });
+  let query = supabase.from(TABLES.PROMPTS).select("*").eq("user_id", userId);
+
+  // Apply search term to both prompt_text and title
+  if (searchTerm && searchTerm.trim()) {
+    query = query.or(
+      `prompt_text.ilike.%${searchTerm}%,title.ilike.%${searchTerm}%`,
+    );
+  }
+
+  // Apply date range filter if provided
+  if (options?.startDate) {
+    query = query.gte("created_at", options.startDate.toISOString());
+  }
+  if (options?.endDate) {
+    query = query.lte("created_at", options.endDate.toISOString());
+  }
+
+  // Apply favorite filter if provided
+  if (options?.favorite !== undefined) {
+    query = query.eq("is_favorite", options.favorite);
+  }
+
+  // Apply template filter if provided
+  if (options?.templateId) {
+    query = query.eq("template_id", options.templateId);
+  }
+
+  // Apply pagination
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query = query.range(
+      options.offset,
+      options.offset + (options.limit || 20) - 1,
+    );
+  }
+
+  // Order by creation date (newest first)
+  query = query.order("created_at", { ascending: false });
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Error searching prompts:", error);

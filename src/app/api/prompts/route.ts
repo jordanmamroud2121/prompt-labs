@@ -12,7 +12,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 
 /**
- * GET /api/prompts - Get all prompts or search
+ * GET /api/prompts - Get all prompts or search/filter
  */
 export async function GET(request: NextRequest) {
   return withErrorHandling(async () => {
@@ -24,17 +24,43 @@ export async function GET(request: NextRequest) {
       return createErrorResponse("Unauthorized", 401);
     }
 
-    // Check for search query parameter
+    // Get query parameters
     const searchParams = request.nextUrl.searchParams;
     const searchQuery = searchParams.get("q");
+    const limit = searchParams.get("limit")
+      ? parseInt(searchParams.get("limit")!, 10)
+      : undefined;
+    const offset = searchParams.get("offset")
+      ? parseInt(searchParams.get("offset")!, 10)
+      : undefined;
+    const startDate = searchParams.get("startDate")
+      ? new Date(searchParams.get("startDate")!)
+      : undefined;
+    const endDate = searchParams.get("endDate")
+      ? new Date(searchParams.get("endDate")!)
+      : undefined;
+    const favorite = searchParams.get("favorite")
+      ? searchParams.get("favorite") === "true"
+      : undefined;
+    const templateId = searchParams.get("templateId") || undefined;
+
+    // Build query options
+    const queryOptions = {
+      limit,
+      offset,
+      startDate,
+      endDate,
+      favorite,
+      templateId,
+    };
 
     let prompts;
     if (searchQuery && searchQuery.trim()) {
-      // Search prompts
-      prompts = await searchPrompts(userId, searchQuery);
+      // Search prompts with filtering
+      prompts = await searchPrompts(userId, searchQuery, queryOptions);
     } else {
-      // Get all prompts
-      prompts = await getUserPrompts(userId);
+      // Get all prompts with filtering
+      prompts = await getUserPrompts(userId, queryOptions);
     }
 
     return NextResponse.json(prompts);

@@ -123,32 +123,32 @@ This development plan is organized by complete features (both frontend and backe
 
 1. **Backend Components**
 
-   - [ ] Implement additional AI adapters (Anthropic, Google, etc.) using app-level keys
-   - [ ] Create concurrent request handler
+   - [x] Implement additional AI adapters (Anthropic, Google, etc.) using app-level keys
+   - [x] Create concurrent request handler
    - [x] Add model compatibility checking
 
 2. **Frontend Components**
 
    - [x] Enhance model selection to allow multiple choices
-   - [ ] Build tabbed response interface
-   - [ ] Implement model-specific formatting
-   - [ ] Add progress indicators for multiple requests
+   - [x] Build tabbed response interface
+   - [x] Implement model-specific formatting
+   - [x] Add progress indicators for multiple requests
 
 3. **Testing & Refinement**
-   - [ ] Test sending prompts to multiple models
-   - [ ] Verify tabbed interface functions correctly
-   - [ ] Test handling of different response formats
-   - [ ] Confirm concurrent request functionality
+   - [x] Test sending prompts to multiple models
+   - [x] Verify tabbed interface functions correctly
+   - [x] Test handling of different response formats
+   - [x] Confirm concurrent request functionality
 
 **Phase Checkpoint:**
 
-- [ ] User can select multiple AI models simultaneously
-- [ ] User can submit one prompt to multiple models
-- [ ] Responses from different models appear in tabbed interface
-- [ ] User can switch between model responses via tabs
-- [ ] Progress indicators show status for each model request
-- [ ] Different response formats (markdown, code, etc.) render correctly
-- [ ] Model-specific features (e.g., streaming for supported models) work properly
+- [x] User can select multiple AI models simultaneously
+- [x] User can submit one prompt to multiple models
+- [x] Responses from different models appear in tabbed interface
+- [x] User can switch between model responses via tabs
+- [x] Progress indicators show status for each model request
+- [x] Different response formats (markdown, code, etc.) render correctly
+- [x] Model-specific features (e.g., streaming for supported models) work properly
 
 ## Phase 4: History Management Feature
 
@@ -157,32 +157,32 @@ This development plan is organized by complete features (both frontend and backe
 1. **Backend Components**
 
    - [x] Implement history query endpoints
-   - [ ] Add filtering and search capabilities
+   - [x] Add filtering and search capabilities
    - [x] Create history item restoration endpoint
 
 2. **Frontend Components**
 
    - [x] Build history sidebar with chronological display
-   - [ ] Implement history search and filtering UI
+   - [x] Implement history search and filtering UI
    - [x] Create history item component with restore action
-   - [ ] Add date-based grouping of history items
+   - [x] Add date-based grouping of history items
 
 3. **Testing & Refinement**
-   - [ ] Test history display and navigation
-   - [ ] Verify search and filtering functionality
-   - [ ] Test prompt restoration from history
-   - [ ] Confirm persistence across sessions
+   - [x] Test history display and navigation
+   - [x] Verify search and filtering functionality
+   - [x] Test prompt restoration from history
+   - [x] Confirm persistence across sessions
 
 **Phase Checkpoint:**
 
-- [ ] User can view history of previous prompts and responses
-- [ ] History items are grouped by date/time periods
-- [ ] User can search history items by content
-- [ ] User can filter history by date range
-- [ ] User can click on a history item to view full details
-- [ ] User can restore a previous prompt to the input field
-- [ ] History persists across browser sessions
-- [ ] History loads with pagination for performance
+- [x] User can view history of previous prompts and responses
+- [x] History items are grouped by date/time periods
+- [x] User can search history items by content
+- [x] User can filter history by date range
+- [x] User can click on a history item to view full details
+- [x] User can restore a previous prompt to the input field
+- [x] History persists across browser sessions
+- [x] History loads with pagination for performance
 
 ## Phase 5: Template System Feature
 

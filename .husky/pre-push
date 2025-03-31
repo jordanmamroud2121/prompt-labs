@@ -1,5 +1,10 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
+# Always run linting
 npm run lint
-npm run build 
+
+# Only run build if we're not in development mode
+if [ "$NODE_ENV" != "development" ]; then
+  npm run build
+fi 
