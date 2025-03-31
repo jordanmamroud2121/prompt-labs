@@ -3,6 +3,7 @@
  */
 
 export interface AIRequestOptions {
+  modelId?: string;
   maxTokens?: number;
   temperature?: number;
   topP?: number;

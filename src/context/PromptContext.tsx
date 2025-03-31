@@ -11,9 +11,10 @@ import React, {
 import { createPrompt } from "@/lib/supabase/queries/prompts";
 import { createResponse } from "@/lib/supabase/queries/responses";
 import { ServiceName } from "@/lib/supabase/models";
-import { getAIClient } from "@/lib/ai/clientFactory";
+import { initializeClient } from "@/lib/ai/clientFactory";
 import { useAuth } from "./AuthContext";
 import { MODELS } from "@/lib/ai/modelData";
+import { useAPIKeys } from "./APIKeyContext";
 // import { toast } from "@/components/ui/use-toast";
 
 export interface PromptState {
@@ -27,6 +28,8 @@ export interface PromptState {
   selectedTemplateId: string | null;
   validationMessage: string | null;
   errorMessage: string | null;
+  responseTimes: Record<string, number>;
+  progressStatus: Record<string, number>;
 }
 
 interface PromptContextType extends PromptState {
@@ -57,13 +60,35 @@ const defaultState: PromptState = {
   selectedTemplateId: null,
   validationMessage: null,
   errorMessage: null,
+  responseTimes: {},
+  progressStatus: {},
 };
 
 const PromptContext = createContext<PromptContextType | undefined>(undefined);
 
+// Fix the provider to service mapping with proper type safety
+const PROVIDER_TO_SERVICE: Record<string, ServiceName> = {
+  'openai': 'openai',
+  'anthropic': 'anthropic',
+  'google': 'gemini',
+  'deepseek': 'deepseek',
+  'perplexity': 'perplexity'
+} as const;
+
 export function PromptProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
+  const apiKeyContext = useAPIKeys();
   const [state, setState] = useState<PromptState>(defaultState);
+
+  // Log API keys for troubleshooting (keys will be masked for security)
+  useEffect(() => {
+    if (apiKeyContext) {
+      console.log("Available API services:", Object.keys(apiKeyContext.apiKeys || {}));
+      console.log("OpenAI key available in context:", !!apiKeyContext.apiKeys?.openai);
+      console.log("OpenAI key validation status:", apiKeyContext.validationStatus?.openai);
+      console.log("Using environment variables:", apiKeyContext.usingEnvVars?.openai);
+    }
+  }, [apiKeyContext]);
 
   // Update character count whenever prompt text changes
   useEffect(() => {
@@ -111,51 +136,38 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       selectedTemplateId: null,
       validationMessage: null,
       errorMessage: null,
+      responseTimes: {},
+      progressStatus: {},
     }));
   }, []);
 
   const addAttachment = useCallback((file: File) => {
-    setState((prev) => {
-      // Check if adding this attachment would make some models incompatible
-      const newAttachments = [...prev.attachments, file];
-      const hasImages = newAttachments.some(file => 
-        file.type.startsWith('image/'));
+    setState((prevState) => {
+      // Create new attachments array
+      const newAttachments = [...prevState.attachments, file];
+      const hasImages = newAttachments.some(file => file.type.startsWith('image/'));
       
-      // Filter selected models to only include those that support images
-      let newSelectedModels = prev.selectedModels;
-      if (hasImages) {
-        // Check in a single go if we need to filter models
-        const compatibleModels = MODELS.filter(model => 
-          model.capabilities.images && 
-          prev.selectedModels.includes(model.id)
-        ).map(model => model.id);
-        
-        // Only update if we need to filter out incompatible models
-        if (compatibleModels.length < prev.selectedModels.length) {
-          newSelectedModels = compatibleModels;
-          
-          // We'll set the error message in a separate update to avoid potential loop
-          setTimeout(() => {
-            setState(prevState => {
-              // Only set the error message if it hasn't changed in the meantime
-              if (!prevState.errorMessage) {
-                return {
-                  ...prevState,
-                  errorMessage: "Some selected models don't support image attachments and have been removed."
-                };
-              }
-              return prevState;
-            });
-          }, 0);
-        }
-      }
+      // Get compatible models in a type-safe way
+      const compatibleModels = MODELS
+        .filter(model => model.capabilities.images && prevState.selectedModels.includes(model.id))
+        .map(model => model.id);
       
-      return {
-        ...prev,
+      // Check if we need to filter out models
+      const shouldFilterModels = hasImages && compatibleModels.length < prevState.selectedModels.length;
+      
+      // Prepare the new state
+      const newState: Partial<PromptState> = {
         attachments: newAttachments,
         hasAttachments: true,
-        selectedModels: newSelectedModels,
       };
+      
+      // Update selected models if needed
+      if (shouldFilterModels) {
+        newState.selectedModels = compatibleModels;
+        newState.errorMessage = "Some selected models don't support image attachments and have been removed.";
+      }
+      
+      return { ...prevState, ...newState };
     });
   }, []);
 
@@ -201,22 +213,19 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
       return MODELS.map(model => model.id);
     }
     
-    const hasImages = state.attachments.some(file => 
-      file.type.startsWith('image/'));
-    
-    const hasAudio = state.attachments.some(file => 
-      file.type.startsWith('audio/'));
-      
-    const hasVideo = state.attachments.some(file => 
-      file.type.startsWith('video/'));
+    const hasImages = state.attachments.some(file => file.type.startsWith('image/'));
+    const hasAudio = state.attachments.some(file => file.type.startsWith('audio/'));
+    const hasVideo = state.attachments.some(file => file.type.startsWith('video/'));
     
     // Return filtered models based on capabilities
-    return MODELS.filter(model => {
-      if (hasImages && !model.capabilities.images) return false;
-      if (hasAudio && !model.capabilities.audio) return false;
-      if (hasVideo && !model.capabilities.video) return false;
-      return true;
-    }).map(model => model.id);
+    return MODELS
+      .filter(model => {
+        if (hasImages && !model.capabilities.images) return false;
+        if (hasAudio && !model.capabilities.audio) return false;
+        if (hasVideo && !model.capabilities.video) return false;
+        return true;
+      })
+      .map(model => model.id);
   }, [state.hasAttachments, state.attachments]);
 
   const validatePrompt = useCallback((): boolean => {
@@ -268,108 +277,178 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   }, [state.promptText, state.selectedModels, state.hasAttachments, getCompatibleModels]);
 
   const handlePromptSubmit = useCallback(async () => {
-    if (!validatePrompt() || state.isLoading || !user) {
+    // Validate the prompt before submission
+    if (!validatePrompt()) {
       return;
     }
 
-    setState((prev) => ({ 
-      ...prev, 
-      isLoading: true, 
+    // Set loading state
+    setState(prev => ({
+      ...prev,
+      isLoading: true,
       responses: {},
-      errorMessage: null 
+      responseTimes: {},
+      progressStatus: Object.fromEntries(prev.selectedModels.map(model => [model, 0]))
     }));
 
     try {
       // Save prompt to database
-      const savedPrompt = await createPrompt({
-        user_id: user.id,
+      const promptRecord = await createPrompt({
+        user_id: user?.id || 'anonymous',
         prompt_text: state.promptText,
         is_favorite: false,
-        template_id: state.selectedTemplateId ?? undefined,
+        attachments: state.hasAttachments ? state.attachments.map(file => URL.createObjectURL(file)) : undefined,
+        template_id: state.selectedTemplateId || undefined,
       });
 
-      // Process responses for each selected model
-      const responses: Record<string, string> = {};
-      const responsePromises = state.selectedModels.map(async (modelId) => {
+      console.log("Created prompt record:", promptRecord);
+
+      // Process each selected model concurrently
+      const modelRequests = state.selectedModels.map(async (modelId) => {
         try {
-          // Identify which service this model belongs to
-          let serviceName: ServiceName = "openai";
-          const model = MODELS.find(m => m.id === modelId);
-          
-          if (!model) {
+          const startTime = Date.now();
+
+          // Get model information
+          const modelInfo = MODELS.find(m => m.id === modelId);
+          if (!modelInfo) {
             throw new Error(`Unknown model: ${modelId}`);
           }
+
+          // Map provider to correct service name using our mapping
+          const providerName = modelInfo.provider.toLowerCase();
+          const service = PROVIDER_TO_SERVICE[providerName] || (() => {
+            throw new Error(`Unknown service for provider: ${modelInfo.provider}`);
+          })();
+
+          console.log(`Processing request for model ${modelId} using ${service} service`);
+
+          // Update progress status to show we're starting
+          setState(prev => ({
+            ...prev,
+            progressStatus: {
+              ...prev.progressStatus,
+              [modelId]: 5 // 5% - started
+            }
+          }));
+
+          // Check if we have the necessary API key
+          const userApiKey = apiKeyContext?.apiKeys?.[service];
+          const envApiKey = process.env[`NEXT_PUBLIC_${service.toUpperCase()}_API_KEY`];
           
-          switch (model.provider.toLowerCase()) {
-            case "openai":
-              serviceName = "openai";
-              break;
-            case "anthropic":
-              serviceName = "anthropic";
-              break;
-            case "google":
-              serviceName = "gemini";
-              break;
-            case "perplexity":
-              serviceName = "perplexity";
-              break;
-            case "deepseek":
-              serviceName = "deepseek";
-              break;
-            default:
-              serviceName = "openai";
+          console.log(`API key status for ${service}:`, {
+            userKeyAvailable: !!userApiKey,
+            envKeyAvailable: !!envApiKey
+          });
+
+          // Initialize the client
+          const client = await initializeClient(service, userApiKey);
+          
+          // Update progress status
+          setState(prev => ({
+            ...prev,
+            progressStatus: {
+              ...prev.progressStatus,
+              [modelId]: 20 // 20% - client initialized
+            }
+          }));
+
+          console.log(`Sending prompt to ${modelId}...`);
+          // Send the prompt to the AI service
+          const response = await client.generateCompletion({
+            prompt: state.promptText,
+            options: {
+              modelId,
+              temperature: 0.7,
+              maxTokens: 2048
+            }
+          });
+          
+          console.log(`Received response from ${modelId}`);
+          
+          // Calculate time taken
+          const endTime = Date.now();
+          const timeTaken = endTime - startTime;
+
+          // Update progress to indicate completion
+          setState(prev => ({
+            ...prev,
+            progressStatus: {
+              ...prev.progressStatus,
+              [modelId]: 100 // 100% - completed
+            }
+          }));
+
+          // Save the response to database
+          if (promptRecord) {
+            await createResponse({
+              prompt_id: promptRecord.id,
+              service_name: service,
+              response_text: response.text,
+              tokens_used: response.tokensUsed || 0,
+              execution_time: timeTaken,
+              error: response.error || undefined,
+            });
           }
 
-          // Get the client for this service
-          const client = getAIClient(serviceName);
-
-          // Generate response using the client
-          const aiResponse = await client.generateCompletion({
-            prompt: state.promptText,
-            attachments: state.hasAttachments ? state.attachments : undefined,
-          });
-
-          // Store the response
-          responses[modelId] = aiResponse.text;
-
-          // Save the response to the database
-          await createResponse({
-            prompt_id: savedPrompt.id,
-            service_name: serviceName,
-            response_text: aiResponse.text,
-            execution_time: aiResponse.executionTime,
-            tokens_used: aiResponse.tokensUsed,
-          });
-        } catch (error) {
-          console.error(`Error generating response from ${modelId}:`, error);
-          responses[modelId] = `Error: Failed to generate response from ${modelId}`;
-          
-          // Set error message
-          setState(prevState => ({
-            ...prevState,
-            errorMessage: `Failed to generate response: ${(error as Error).message || 'Unknown error'}`
+          // Add response to state
+          setState(prev => ({
+            ...prev,
+            responses: {
+              ...prev.responses,
+              [modelId]: response.text
+            },
+            responseTimes: {
+              ...prev.responseTimes,
+              [modelId]: timeTaken
+            }
           }));
+
+          return { modelId, success: true };
+        } catch (error) {
+          console.error(`Error with model ${modelId}:`, error);
+          
+          // Add error response to state
+          setState(prev => ({
+            ...prev,
+            responses: {
+              ...prev.responses,
+              [modelId]: `Error: ${error instanceof Error ? error.message : "Unknown error occurred"}`
+            },
+            progressStatus: {
+              ...prev.progressStatus,
+              [modelId]: 100 // 100% but with error
+            }
+          }));
+
+          return { modelId, success: false, error };
         }
       });
 
-      // Wait for all responses to complete
-      await Promise.all(responsePromises);
-
-      setState((prev) => ({
-        ...prev,
-        responses,
-        isLoading: false,
-      }));
+      // Wait for all requests to complete
+      await Promise.all(modelRequests);
     } catch (error) {
       console.error("Error submitting prompt:", error);
-      setState((prev) => ({
+      setState(prev => ({
         ...prev,
-        isLoading: false,
-        errorMessage: `Failed to submit prompt: ${(error as Error).message || 'Unknown error'}`,
+        errorMessage: error instanceof Error ? error.message : "Error submitting prompt"
+      }));
+    } finally {
+      // Clear loading state
+      setState(prev => ({
+        ...prev,
+        isLoading: false
       }));
     }
-  }, [state.promptText, state.selectedModels, state.hasAttachments, 
-      state.attachments, state.selectedTemplateId, user, validatePrompt]);
+  }, [
+    state.promptText, 
+    state.selectedModels, 
+    state.hasAttachments, 
+    state.attachments,
+    state.selectedTemplateId,
+    user?.id,
+    apiKeyContext,
+    validatePrompt
+  ]);
 
   const value = useMemo(
     () => ({
