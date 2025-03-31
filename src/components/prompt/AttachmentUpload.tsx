@@ -64,7 +64,11 @@ export default function AttachmentUpload() {
     if (SUPPORTED_IMAGE_TYPES.includes(fileType)) {
       return (
         <span role="img" aria-label="Image file">
-          <Image className="h-5 w-5" aria-hidden="true" />
+          <Image
+            className="h-5 w-5"
+            aria-hidden="true"
+            aria-label="Image file"
+          />
         </span>
       );
     }

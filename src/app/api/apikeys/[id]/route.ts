@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { schemas, validateBody } from "@/lib/api/validators";
-import { withErrorHandling, createErrorResponse } from "@/lib/api/errorHandling";
+import {
+  withErrorHandling,
+  createErrorResponse,
+} from "@/lib/api/errorHandling";
 import {
   getApiKeyById,
   updateApiKey,
@@ -11,10 +14,10 @@ import { supabase } from "@/lib/supabase/client";
 /**
  * GET /api/apikeys/[id] - Get API key by ID
  */
-export async function GET(
+export const GET = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  context: { params: { id: string } },
+) => {
   return withErrorHandling(async () => {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
@@ -25,7 +28,7 @@ export async function GET(
     }
 
     // Get API key by ID
-    const apiKey = await getApiKeyById(params.id);
+    const apiKey = await getApiKeyById(context.params.id);
 
     // Check if API key exists and belongs to user
     if (!apiKey || apiKey.user_id !== userId) {
@@ -40,19 +43,19 @@ export async function GET(
       created_at: apiKey.created_at,
       last_used_at: apiKey.last_used_at,
       api_key: `${apiKey.api_key.substring(0, 3)}...${apiKey.api_key.substring(
-        apiKey.api_key.length - 3
+        apiKey.api_key.length - 3,
       )}`,
     });
   });
-}
+};
 
 /**
  * PUT /api/apikeys/[id] - Update API key
  */
-export async function PUT(
+export const PUT = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  context: { params: { id: string } },
+) => {
   return withErrorHandling(async () => {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
@@ -63,7 +66,7 @@ export async function PUT(
     }
 
     // Get existing API key
-    const existingKey = await getApiKeyById(params.id);
+    const existingKey = await getApiKeyById(context.params.id);
 
     // Check if API key exists and belongs to user
     if (!existingKey || existingKey.user_id !== userId) {
@@ -73,7 +76,7 @@ export async function PUT(
     // Validate request body
     const [validatedData, validationError] = await validateBody(
       request,
-      schemas.apiKey.partial()
+      schemas.apiKey.partial(),
     );
 
     if (validationError) {
@@ -81,7 +84,7 @@ export async function PUT(
     }
 
     // Update API key
-    const updatedKey = await updateApiKey(params.id, validatedData!);
+    const updatedKey = await updateApiKey(context.params.id, validatedData!);
 
     // Return sanitized response
     return NextResponse.json({
@@ -92,15 +95,15 @@ export async function PUT(
       last_used_at: updatedKey.last_used_at,
     });
   });
-}
+};
 
 /**
  * DELETE /api/apikeys/[id] - Delete API key
  */
-export async function DELETE(
+export const DELETE = async (
   request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+  context: { params: { id: string } },
+) => {
   return withErrorHandling(async () => {
     // Get user ID from session
     const { data } = await supabase.auth.getSession();
@@ -111,7 +114,7 @@ export async function DELETE(
     }
 
     // Get existing API key
-    const existingKey = await getApiKeyById(params.id);
+    const existingKey = await getApiKeyById(context.params.id);
 
     // Check if API key exists and belongs to user
     if (!existingKey || existingKey.user_id !== userId) {
@@ -119,11 +122,11 @@ export async function DELETE(
     }
 
     // Delete API key
-    await deleteApiKey(params.id);
+    await deleteApiKey(context.params.id);
 
     return NextResponse.json(
       { message: "API key deleted successfully" },
-      { status: 200 }
+      { status: 200 },
     );
   });
-} 
+};
