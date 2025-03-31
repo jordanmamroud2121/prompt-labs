@@ -23,33 +23,29 @@ export class AnthropicClient implements AIClient {
 
   async generateCompletion(request: AIRequest): Promise<AIResponse> {
     if (!this.apiKey) {
-      throw new Error("Anthropic API key is required");
+      console.log("No API key set, using server-side proxy");
     }
 
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
     
     try {
-      const response = await fetch(this.baseUrl, {
+      const requestBody = {
+        model,
+        prompt: request.prompt,
+        max_tokens: request.options?.maxTokens || 4000,
+        temperature: request.options?.temperature,
+        top_p: request.options?.topP,
+        stream: false
+      };
+
+      // Make the API request via our server-side proxy
+      const response = await fetch("/api/ai/anthropic", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "X-API-Key": this.apiKey,
-          "anthropic-version": this.apiVersion
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            { 
-              role: "user", 
-              content: request.prompt
-            }
-          ],
-          max_tokens: request.options?.maxTokens || 4000,
-          temperature: request.options?.temperature,
-          top_p: request.options?.topP,
-          stream: false
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {

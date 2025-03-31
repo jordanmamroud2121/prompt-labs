@@ -47,66 +47,27 @@ export class GeminiClient implements AIClient {
     
     // Make one more attempt to get the API key if it's not set
     if (!this.apiKey) {
-      console.log("No API key set, making final check for environment variables");
-      
-      // Try to read directly from Next.js environment variables
-      const envKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-      
-      if (envKey) {
-        this.apiKey = envKey;
-        console.log("Successfully loaded Gemini API key from environment variables");
-      } else {
-        console.error("Failed to find Gemini API key in environment variables");
-        
-        const errorDetails = {
-          envVarExists: 'NEXT_PUBLIC_GEMINI_API_KEY' in process.env,
-          envVarValue: process.env.NEXT_PUBLIC_GEMINI_API_KEY ? "has value" : "is empty or undefined"
-        };
-        console.error("Environment variable details:", errorDetails);
-        
-        throw new Error("Gemini API key is required but not found");
-      }
-    }
-    
-    // Add this after the existing environment variable checks in generateCompletion
-    if (!this.apiKey) {
-      // Hardcoded fallback for development ONLY
-      console.log("DEVELOPMENT FALLBACK: Using hardcoded API key from .env.local");
-      this.apiKey = 'AIzaSyC387Fk93YyAp_cPmfDoGxGIuqf-uVaea4';
-      
-      // Warning about this approach
-      console.warn(
-        "WARNING: Using hardcoded API key is not recommended for production. " +
-        "This is a temporary development fallback only."
-      );
+      console.log("No API key set, using server-side proxy");
     }
     
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
     
     try {
-      console.log(`Making Gemini API call to ${model} with key ${this.apiKey.substring(0, 4)}...`);
-      
-      const apiUrl = `${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`;
-      console.log(`API URL: ${apiUrl}`);
+      console.log(`Preparing Gemini API call to ${model}`);
       
       const requestBody = {
-        contents: [
-          { 
-            role: "user", 
-            parts: [{ text: request.prompt }]
-          }
-        ],
-        generationConfig: {
-          temperature: request.options?.temperature,
-          topP: request.options?.topP,
-          maxOutputTokens: request.options?.maxTokens
-        }
+        model,
+        prompt: request.prompt,
+        temperature: request.options?.temperature,
+        top_p: request.options?.topP,
+        max_tokens: request.options?.maxTokens
       };
+      
       console.log("Request body:", JSON.stringify(requestBody));
 
-      // Make the API request
-      const response = await fetch(apiUrl, {
+      // Make the API request via our server-side proxy
+      const response = await fetch("/api/ai/gemini", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

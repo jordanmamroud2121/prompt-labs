@@ -30,38 +30,17 @@ export class OpenAIClient implements AIClient {
   async generateCompletion(request: AIRequest): Promise<AIResponse> {
     console.log("generateCompletion called, apiKey available:", !!this.apiKey);
     
-    // Try to use API key from environment if not set yet (server-side only)
-    if (!this.apiKey && typeof window === 'undefined' && process.env.OPENAI_API_KEY) {
-      this.apiKey = process.env.OPENAI_API_KEY;
-      console.log("Using OpenAI API key from server environment variables in generateCompletion");
-    } else if (!this.apiKey && process.env.NEXT_PUBLIC_OPENAI_API_KEY) {
-      this.apiKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-      console.log("Using OpenAI key from client-side public env var");
-    }
-    
     if (!this.apiKey) {
-      console.error("OpenAI API key is required but not provided");
-      throw new Error("OpenAI API key is required");
-    }
-
-    // Check if the API key is valid (not just empty)
-    if (this.apiKey.trim() === '') {
-      console.error("OpenAI API key is empty");
-      throw new Error("OpenAI API key is empty");
-    }
-
-    // Validate that we have a prompt
-    if (!request.prompt || request.prompt.trim() === '') {
-      console.error("Prompt is required");
-      throw new Error("Prompt is required");
+      console.log("No API key available, will use server-side proxy");
     }
 
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
-    console.log(`Making OpenAI request with model: ${model}`);
     
     try {
-      // Construct valid request body
+      console.log(`Preparing OpenAI request for model: ${model}`);
+      
+      // Define the request body type
       type OpenAIRequestBody = {
         model: string;
         messages: { role: string; content: string }[];
@@ -73,7 +52,8 @@ export class OpenAIClient implements AIClient {
         stop?: string[];
         stream: boolean;
       };
-
+      
+      // Prepare the request body
       const requestBody: OpenAIRequestBody = {
         model,
         messages: [
@@ -95,15 +75,11 @@ export class OpenAIClient implements AIClient {
 
       console.log("OpenAI request body:", JSON.stringify(requestBody));
 
-      // Make sure the API key is properly formatted for the request
-      const apiKey = this.apiKey.trim();
-      
-      // Make the API request
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      // Use server-side API proxy route instead of direct API call
+      const response = await fetch("/api/ai/openai", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(requestBody)
       });

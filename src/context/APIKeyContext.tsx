@@ -33,7 +33,7 @@ const APIKeyContext = createContext<APIKeyContextType | undefined>(undefined);
 const ENV_VAR_MAPPING: Record<string, string> = {
   'openai': 'OPENAI_API_KEY',
   'anthropic': 'ANTHROPIC_API_KEY',
-  'gemini': 'GEMINI_API_KEY',
+  'gemini': 'GOOGLE_API_KEY',
   'perplexity': 'PERPLEXITY_API_KEY',
   'deepseek': 'DEEPSEEK_API_KEY',
 };
@@ -81,33 +81,37 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
         }
       });
       
-      // Then, add environment variables for any missing keys
-      for (const [serviceName, envVar] of Object.entries(ENV_VAR_MAPPING)) {
-        // Only use env var if user doesn't have a key for this service
-        if (!apiKeys[serviceName] && process.env[envVar]) {
-          apiKeys[serviceName] = process.env[envVar] || '';
-          // For development, assume OpenAI and Google env vars are valid immediately
-          if (serviceName === 'openai' || serviceName === 'google') {
-            validationStatus[serviceName] = 'valid';
-          } else {
-            validationStatus[serviceName] = 'unknown';
+      // Check which providers have server-side keys available
+      // Make a request to check which APIs are available server-side
+      try {
+        const response = await fetch('/api/ai/available');
+        if (response.ok) {
+          const availableProviders = await response.json();
+          
+          // Mark providers with server-side keys as available
+          for (const provider of availableProviders.providers) {
+            if (!apiKeys[provider]) {
+              // Only use server keys if user doesn't have their own
+              apiKeys[provider] = 'server-key';  // Placeholder value
+              validationStatus[provider] = 'valid';
+              usingEnvVars[provider] = true;
+            }
           }
-          usingEnvVars[serviceName] = true;
         }
-      }
-      
-      // For our development environment, always include OpenAI and Google
-      // if environment variables exist in .env.local
-      if (!apiKeys['openai'] && process.env.OPENAI_API_KEY) {
-        apiKeys['openai'] = process.env.OPENAI_API_KEY || '';
-        validationStatus['openai'] = 'valid'; // Assume valid for development
-        usingEnvVars['openai'] = true;
-      }
-      
-      if (!apiKeys['google'] && process.env.GEMINI_API_KEY) {
-        apiKeys['google'] = process.env.GEMINI_API_KEY || '';
-        validationStatus['google'] = 'valid'; // Assume valid for development
-        usingEnvVars['google'] = true;
+      } catch (error) {
+        console.error('Error checking server-side API availability:', error);
+        // Fall back to assuming OpenAI and Google are available
+        if (!apiKeys['openai']) {
+          apiKeys['openai'] = 'server-key';
+          validationStatus['openai'] = 'valid';
+          usingEnvVars['openai'] = true;
+        }
+        
+        if (!apiKeys['gemini']) {
+          apiKeys['gemini'] = 'server-key';
+          validationStatus['gemini'] = 'valid';
+          usingEnvVars['gemini'] = true;
+        }
       }
       
       setState(prev => ({
@@ -121,7 +125,7 @@ export function APIKeyProvider({ children }: { children: React.ReactNode }) {
       // We'll validate the keys after the component is fully mounted
       // and the validateApiKey function is available
       const keysToValidate = Object.keys(apiKeys).filter(
-        key => validationStatus[key] !== 'valid'
+        key => !usingEnvVars[key] && validationStatus[key] !== 'valid'
       );
       
       if (keysToValidate.length > 0) {
