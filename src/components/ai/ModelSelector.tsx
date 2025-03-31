@@ -10,7 +10,6 @@ export default function ModelSelector() {
   const { 
     selectedModels, 
     setSelectedModels, 
-    hasAttachments, 
     attachments,
     getCompatibleModels 
   } = usePrompt();
@@ -24,8 +23,8 @@ export default function ModelSelector() {
 
   // Use useMemo for compatibleModelIds to avoid recalculation on every render
   const compatibleModelIds = useMemo(() => getCompatibleModels(), 
-    // Include only the necessary dependencies to prevent unnecessary recalculations
-    [getCompatibleModels, hasAttachments, attachments && attachments.length]
+    // Fix dependency array to remove complex expression
+    [getCompatibleModels, attachments.length]
   );
 
   // Filter models to only show ones from OpenAI and Google (we have env vars for these)
