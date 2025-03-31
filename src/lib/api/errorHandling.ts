@@ -97,8 +97,34 @@ export async function withErrorHandling<T>(
   handler: () => Promise<T>,
 ): Promise<T | NextResponse<ErrorResponse>> {
   try {
-    return await handler();
+    console.log("API: Starting handler execution in withErrorHandling wrapper");
+    const result = await handler();
+    console.log("API: Handler execution completed successfully");
+    return result;
   } catch (error) {
+    console.error("API: Error caught in withErrorHandling wrapper:", error);
+
+    // Check if error is already a NextResponse (meaning it's already been handled)
+    if (error instanceof NextResponse) {
+      console.log("API: Error was already formatted as a NextResponse");
+      return error;
+    }
+
+    // Special handling for Supabase errors
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      "message" in error
+    ) {
+      console.error("API: Supabase error detected:", error);
+      return createErrorResponse(
+        `Database error: ${String(error.message)}`,
+        500,
+        String(error.code),
+      );
+    }
+
     return handleApiError(error);
   }
 }
