@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from 'react';
-import { useState } from 'react';
 
 interface MarkdownRendererProps {
   content: string;

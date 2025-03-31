@@ -64,13 +64,13 @@ export default function AttachmentUpload() {
     if (SUPPORTED_IMAGE_TYPES.includes(fileType)) {
       return (
         <span role="img" aria-label="Image file">
-          <Image className="h-5 w-5" />
+          <Image className="h-5 w-5" aria-hidden="true" />
         </span>
       );
     }
     return (
       <span role="img" aria-label="Document file">
-        <File className="h-5 w-5" />
+        <File className="h-5 w-5" aria-hidden="true" />
       </span>
     );
   };

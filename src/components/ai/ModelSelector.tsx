@@ -4,7 +4,7 @@ import React, { useRef, useState, useEffect, useMemo } from "react";
 import { Check, ChevronDown, X } from "lucide-react";
 import { usePrompt } from "@/context/PromptContext";
 import { useAPIKeys } from "@/context/APIKeyContext";
-import { MODELS, AI_PROVIDERS, AIModel, AIProvider } from "@/lib/ai/modelData";
+import { MODELS, AIModel, AIProvider } from "@/lib/ai/modelData";
 
 export default function ModelSelector() {
   const { 

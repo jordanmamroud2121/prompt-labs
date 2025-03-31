@@ -277,8 +277,18 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
   }, [state.promptText, state.selectedModels, state.hasAttachments, getCompatibleModels]);
 
   const handlePromptSubmit = useCallback(async () => {
+    console.log("=== PROMPT SUBMISSION STARTED ===");
+    console.log("State:", {
+      promptText: state.promptText.substring(0, 100) + (state.promptText.length > 100 ? "..." : ""),
+      selectedModels: state.selectedModels,
+      hasUser: !!user,
+      userId: user?.id || 'anonymous',
+      apiKeysAvailable: Object.keys(apiKeyContext?.apiKeys || {})
+    });
+
     // Validate the prompt before submission
     if (!validatePrompt()) {
+      console.log("Prompt validation failed");
       return;
     }
 
@@ -342,6 +352,10 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
 
           // Initialize the client
           const client = await initializeClient(service, userApiKey);
+          console.log(`Client initialized for ${service}:`, {
+            hasClient: !!client,
+            clientType: client?.constructor?.name
+          });
           
           // Update progress status
           setState(prev => ({
@@ -402,6 +416,18 @@ export function PromptProvider({ children }: { children: React.ReactNode }) {
               [modelId]: timeTaken
             }
           }));
+
+          // And then add logging for the response
+          console.log(`Response received from ${modelId}:`, {
+            responseLength: response.text.length,
+            executionTime: timeTaken,
+            hasError: !!response.error,
+            errorText: response.error
+          });
+          // If the response looks suspicious (like a mock), log it
+          if (response.text.includes("This is a mock response") || response.text.includes("API key is required")) {
+            console.warn("POSSIBLE MOCK RESPONSE DETECTED:", response.text.substring(0, 100));
+          }
 
           return { modelId, success: true };
         } catch (error) {

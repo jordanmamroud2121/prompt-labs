@@ -31,7 +31,9 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
 )
 Toast.displayName = "Toast"
 
-interface ToastViewportProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface ToastViewportProps extends React.HTMLAttributes<HTMLDivElement> {
+  slot?: string;
+}
 
 const ToastViewport = React.forwardRef<HTMLDivElement, ToastViewportProps>(
   ({ className, ...props }, ref) => {
@@ -49,7 +51,9 @@ const ToastViewport = React.forwardRef<HTMLDivElement, ToastViewportProps>(
 )
 ToastViewport.displayName = "ToastViewport"
 
-interface ToastTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {}
+interface ToastTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  asChild?: boolean;
+}
 
 const ToastTitle = React.forwardRef<HTMLHeadingElement, ToastTitleProps>(
   ({ className, ...props }, ref) => {
@@ -64,7 +68,9 @@ const ToastTitle = React.forwardRef<HTMLHeadingElement, ToastTitleProps>(
 )
 ToastTitle.displayName = "ToastTitle"
 
-interface ToastDescriptionProps extends React.HTMLAttributes<HTMLDivElement> {}
+interface ToastDescriptionProps extends React.HTMLAttributes<HTMLDivElement> {
+  asChild?: boolean;
+}
 
 const ToastDescription = React.forwardRef<HTMLDivElement, ToastDescriptionProps>(
   ({ className, ...props }, ref) => {
@@ -79,7 +85,9 @@ const ToastDescription = React.forwardRef<HTMLDivElement, ToastDescriptionProps>
 )
 ToastDescription.displayName = "ToastDescription"
 
-interface ToastCloseProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {}
+interface ToastCloseProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  asChild?: boolean;
+}
 
 const ToastClose = React.forwardRef<HTMLButtonElement, ToastCloseProps>(
   ({ className, ...props }, ref) => {
@@ -100,7 +108,9 @@ const ToastClose = React.forwardRef<HTMLButtonElement, ToastCloseProps>(
 )
 ToastClose.displayName = "ToastClose"
 
-interface ToastProviderProps extends React.PropsWithChildren {}
+interface ToastProviderProps extends React.PropsWithChildren {
+  swipeDirection?: 'up' | 'down' | 'left' | 'right';
+}
 
 function ToastProvider({ children }: ToastProviderProps) {
   return <>{children}</>

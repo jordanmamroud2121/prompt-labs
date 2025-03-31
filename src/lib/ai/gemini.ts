@@ -39,6 +39,11 @@ export class GeminiClient implements AIClient {
 
   async generateCompletion(request: AIRequest): Promise<AIResponse> {
     console.log("Gemini generateCompletion called");
+    console.log("Request details:", {
+      promptLength: request.prompt.length,
+      modelRequested: request.options?.modelId || this.defaultModel,
+      attachments: request.attachments?.length || 0
+    });
     
     // Make one more attempt to get the API key if it's not set
     if (!this.apiKey) {
@@ -63,40 +68,96 @@ export class GeminiClient implements AIClient {
       }
     }
     
+    // Add this after the existing environment variable checks in generateCompletion
+    if (!this.apiKey) {
+      // Hardcoded fallback for development ONLY
+      console.log("DEVELOPMENT FALLBACK: Using hardcoded API key from .env.local");
+      this.apiKey = 'AIzaSyC387Fk93YyAp_cPmfDoGxGIuqf-uVaea4';
+      
+      // Warning about this approach
+      console.warn(
+        "WARNING: Using hardcoded API key is not recommended for production. " +
+        "This is a temporary development fallback only."
+      );
+    }
+    
     const startTime = Date.now();
     const model = this.getModelFromRequest(request);
     
     try {
-      const response = await fetch(`${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`, {
+      console.log(`Making Gemini API call to ${model} with key ${this.apiKey.substring(0, 4)}...`);
+      
+      const apiUrl = `${this.baseUrl}/models/${model}:generateContent?key=${this.apiKey}`;
+      console.log(`API URL: ${apiUrl}`);
+      
+      const requestBody = {
+        contents: [
+          { 
+            role: "user", 
+            parts: [{ text: request.prompt }]
+          }
+        ],
+        generationConfig: {
+          temperature: request.options?.temperature,
+          topP: request.options?.topP,
+          maxOutputTokens: request.options?.maxTokens
+        }
+      };
+      console.log("Request body:", JSON.stringify(requestBody));
+
+      // Make the API request
+      const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          contents: [
-            { 
-              role: "user", 
-              parts: [{ text: request.prompt }]
-            }
-          ],
-          generationConfig: {
-            temperature: request.options?.temperature,
-            topP: request.options?.topP,
-            maxOutputTokens: request.options?.maxTokens
-          }
-        })
+        body: JSON.stringify(requestBody)
       });
 
+      console.log("Gemini API response status:", response.status);
+      
+      // Check for response issues
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || `Gemini API error: ${response.status}`);
+        let errorMessage = `Gemini API error: Status ${response.status}`;
+        
+        try {
+          // Try to parse the error response
+          const errorData = await response.json();
+          console.error("Gemini API error data:", errorData);
+          
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          }
+        } catch (parseError) {
+          // If we can't parse as JSON, try to get the text
+          console.error("Error parsing Gemini error response:", parseError);
+          try {
+            const textResponse = await response.text();
+            if (textResponse) {
+              errorMessage += ` - ${textResponse}`;
+            }
+          } catch (e) {
+            console.error("Error getting response text:", e);
+          }
+        }
+        
+        throw new Error(errorMessage);
       }
 
+      // Process the successful response
       const data = await response.json();
+      console.log("Gemini API response data:", data);
+      
       const endTime = Date.now();
       const executionTime = endTime - startTime;
 
-      const contentText = data.candidates[0]?.content?.parts?.[0]?.text || '';
+      // Extract the text from the response
+      const contentText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      console.log(`Extracted content text (${contentText.length} chars)`);
+
+      if (!contentText) {
+        console.warn("No content text found in Gemini response:", data);
+      }
 
       return {
         text: contentText,
